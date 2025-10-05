@@ -35,15 +35,15 @@ const DATA = {
         // (molekul tetap sama seperti sebelumnya)
         H2O: { 
             name: 'Air (H₂O)', 
-            description: 'Molekul polar dengan bentuk tekuk/bent (~104.5°)...'
+            description: 'Molekul polar dengan bentuk tekuk/bent (~104.5°).  Memiliki muatan parsial negatif pada Oksigen dan positif pada Hidrogen'
         },
         CH4: {
             name: 'Metana (CH₄)',
-            description: 'Molekul nonpolar dengan bentuk tetrahedral (~109.5°)...'
+            description: 'Molekul nonpolar dengan bentuk tetrahedral (~109.5°). Komponen utama gas alam.'
         },
         CO2: {
             name: 'Karbondioksida (CO₂)',
-            description: 'Molekul nonpolar dengan bentuk linear...'
+            description: 'Molekul nonpolar dengan bentuk linear. Terdiri dari ikatan kovalen rangkap dua.'
         }
     }
 };
