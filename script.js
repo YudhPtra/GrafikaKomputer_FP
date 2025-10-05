@@ -5,23 +5,45 @@ import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
 const DATA = {
-    atoms: {
-        H: { name: 'Hidrogen', symbol: 'H', color: 0xffffff },
-        C: { name: 'Karbon', symbol: 'C', color: 0x282828 },
-        O: { name: 'Oksigen', symbol: 'O', color: 0xff0000 },
+     atoms: {
+        H: { 
+            name: 'Hidrogen', 
+            symbol: 'H', 
+            color: 0xffffff,
+            atomicNumber: 1,
+            atomicMass: "1.008 u",
+            description: "Hidrogen adalah atom paling ringan dan unsur paling melimpah di alam semesta."
+        },
+        C: { 
+            name: 'Karbon', 
+            symbol: 'C', 
+            color: 0x282828,
+            atomicNumber: 6,
+            atomicMass: "12.011 u",
+            description: "Karbon adalah dasar dari semua kehidupan, dapat membentuk ikatan kovalen kompleks."
+        },
+        O: { 
+            name: 'Oksigen', 
+            symbol: 'O', 
+            color: 0xff0000,
+            atomicNumber: 8,
+            atomicMass: "15.999 u",
+            description: "Oksigen sangat penting untuk respirasi, membentuk 21% atmosfer bumi."
+        },
     },
     molecules: {
+        // (molekul tetap sama seperti sebelumnya)
         H2O: { 
             name: 'Air (H₂O)', 
-            description: 'Molekul polar dengan bentuk tekuk/bent (~104.5°). Memiliki muatan parsial negatif pada Oksigen dan positif pada Hidrogen.',
+            description: 'Molekul polar dengan bentuk tekuk/bent (~104.5°).  Memiliki muatan parsial negatif pada Oksigen dan positif pada Hidrogen'
         },
         CH4: {
             name: 'Metana (CH₄)',
-            description: 'Molekul nonpolar dengan bentuk tetrahedral (~109.5°). Komponen utama gas alam.',
+            description: 'Molekul nonpolar dengan bentuk tetrahedral (~109.5°). Komponen utama gas alam.'
         },
         CO2: {
             name: 'Karbondioksida (CO₂)',
-            description: 'Molekul nonpolar dengan bentuk linear. Terdiri dari ikatan kovalen rangkap dua.',
+            description: 'Molekul nonpolar dengan bentuk linear. Terdiri dari ikatan kovalen rangkap dua.'
         }
     }
 };
@@ -33,6 +55,11 @@ let mainGroup;
 let defaultFont; 
 const canvasContainer = document.getElementById('canvas-container');
 let textLabelsToBillboard = []; 
+
+let raycaster = new THREE.Raycaster();
+let mouse = new THREE.Vector2();
+
+
 
 function init() {
     scene = new THREE.Scene();
@@ -53,6 +80,9 @@ function init() {
     labelRenderer.domElement.style.top = '0px';
     labelRenderer.domElement.style.pointerEvents = 'none'; 
     document.body.appendChild(labelRenderer.domElement);
+
+    renderer.domElement.addEventListener('click', onClick, false);
+
 
     mainGroup = new THREE.Group();
     scene.add(mainGroup);
@@ -164,6 +194,9 @@ function createAtomMesh(radius, color, symbol, charge = null, chargeColor = 0xff
     atomSphere.receiveShadow = true;
     atomGroup.add(atomSphere);
 
+    // --- IMPORTANT: set userData on the group so clicking text/mesh still identifies the atom ---
+    atomGroup.userData = { type: 'atom', symbol: symbol };
+
     if (defaultFont) {
         const textGroup = new THREE.Group();
         atomGroup.add(textGroup);
@@ -210,6 +243,7 @@ function createAtomMesh(radius, color, symbol, charge = null, chargeColor = 0xff
 
     return atomGroup;
 }
+
 
 
 function createBondMesh(pos1, pos2, radius = 0.1) {
@@ -329,12 +363,27 @@ function drawCarbonDioxide() {
     const bond4_pos_b = o2.position.clone().setY(-doubleBondOffset);
     mainGroup.add(createBondMesh(bond4_pos_a, bond4_pos_b, 0.08));
 }
-
-
 function displayAtom(atomKey) {
-    updateInfoPanel("Penjelajah Atom", "Fitur ini sedang dalam pengembangan. Silakan pilih molekul dari galeri.");
     clearScene();
+    const atomData = DATA.atoms[atomKey];
+    if (!atomData) return;
+
+    // Buat satu atom besar
+    const atom = createAtomMesh(1.2, atomData.color, atomData.symbol);
+    mainGroup.add(atom);
+
+    // Panel info
+    const infoText = `
+        Nomor Atom: ${atomData.atomicNumber}<br>
+        Massa Atom: ${atomData.atomicMass}<br><br>
+        ${atomData.description}
+    `;
+    updateInfoPanel(atomData.name, infoText);
+
+    controls.target.set(0, 0, 0);
+    camera.position.set(0, 0, 6);
 }
+
 
 function setupUIListeners() {
     document.querySelectorAll('.btn').forEach(button => {
@@ -350,6 +399,31 @@ function setupUIListeners() {
         });
     });
 }
+
+function onClick(event) {
+    // Hitung posisi mouse normalisasi (-1..1)
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    // Cari objek yang kena ray
+    const intersects = raycaster.intersectObjects(mainGroup.children, true);
+
+   if (intersects.length > 0) {
+    // cari object teratas yang punya userData.type === 'atom'
+    let obj = intersects[0].object;
+    while (obj && !obj.userData?.type) {
+        obj = obj.parent;
+    }
+    if (obj && obj.userData && obj.userData.type === 'atom') {
+        displayAtom(obj.userData.symbol);
+    }
+}
+
+}
+
 
 // --- MULAI APLIKASI ---
 init();
