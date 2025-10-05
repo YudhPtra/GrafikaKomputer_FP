@@ -59,6 +59,8 @@ let textLabelsToBillboard = [];
 let raycaster = new THREE.Raycaster();
 let mouse = new THREE.Vector2();
 
+let currentMolecule = null;   // untuk tahu molekul apa yang terakhir dilihat
+let hoveredAtom = null;       // untuk highlight atom
 
 
 function init() {
@@ -82,6 +84,8 @@ function init() {
     document.body.appendChild(labelRenderer.domElement);
 
     renderer.domElement.addEventListener('click', onClick, false);
+renderer.domElement.addEventListener('mousemove', onMouseMove, false);
+
 
 
     mainGroup = new THREE.Group();
@@ -262,26 +266,25 @@ function createBondMesh(pos1, pos2, radius = 0.1) {
 
 function displayMolecule(moleculeKey) {
     clearScene();
-    const moleculeData = DATA.molecules[moleculeKey];
-    if (!moleculeData) return;
+    currentMolecule = moleculeKey;
 
-    switch (moleculeKey) {
-        case 'H2O':
-            drawWater();
-            break;
-        case 'CH4':
-            drawMethane();
-            break;
-        case 'CO2':
-            drawCarbonDioxide();
-            break;
-        default:
-            updateInfoPanel(moleculeData.name, "Visualisasi untuk molekul ini belum diimplementasikan.");
-            break;
+    if (moleculeKey === "H2O") {
+        drawWater();
+    } else if (moleculeKey === "CH4") {
+        drawMethane();
+    } else if (moleculeKey === "CO2") {
+        drawCarbonDioxide();
     }
-    
+
+    const molecule = DATA.molecules[moleculeKey];
+    if (molecule) {
+        updateInfoPanel("Molekul: " + molecule.name, molecule.description);
+    } else {
+        updateInfoPanel("Molekul: " + moleculeKey, "Klik atom untuk detail.");
+    }
+
     controls.target.set(0, 0, 0);
-    updateInfoPanel(moleculeData.name, moleculeData.description);
+    camera.position.set(0, 0, 6);
 }
 
 function drawWater() {
@@ -368,22 +371,33 @@ function displayAtom(atomKey) {
     const atomData = DATA.atoms[atomKey];
     if (!atomData) return;
 
-    // Buat satu atom besar
     const atom = createAtomMesh(1.2, atomData.color, atomData.symbol);
     mainGroup.add(atom);
 
-    // Panel info
+    // Panel info + tombol kembali
     const infoText = `
         Nomor Atom: ${atomData.atomicNumber}<br>
         Massa Atom: ${atomData.atomicMass}<br><br>
-        ${atomData.description}
+        ${atomData.description}<br><br>
+        <button id="backBtn">🔙 Kembali ke Molekul</button>
     `;
     updateInfoPanel(atomData.name, infoText);
+
+    // Event tombol kembali
+    setTimeout(() => {
+        const backBtn = document.getElementById("backBtn");
+        if (backBtn) {
+            backBtn.addEventListener("click", () => {
+                if (currentMolecule) {
+                    displayMolecule(currentMolecule);
+                }
+            });
+        }
+    }, 50);
 
     controls.target.set(0, 0, 0);
     camera.position.set(0, 0, 6);
 }
-
 
 function setupUIListeners() {
     document.querySelectorAll('.btn').forEach(button => {
@@ -423,6 +437,41 @@ function onClick(event) {
 }
 
 }
+
+
+function onMouseMove(event) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(mainGroup.children, true);
+
+    if (intersects.length > 0) {
+        let obj = intersects[0].object;
+        while (obj && !obj.userData?.type) obj = obj.parent;
+
+        if (obj && obj.userData?.type === "atom") {
+            if (hoveredAtom !== obj) {
+                // reset atom lama
+                if (hoveredAtom) {
+                    hoveredAtom.children[0].material.emissive.set(0x000000);
+                }
+                // highlight atom baru
+                obj.children[0].material.emissive.set(0xffff00);
+                hoveredAtom = obj;
+            }
+            return;
+        }
+    }
+
+    // kalau tidak ada atom di hover
+    if (hoveredAtom) {
+        hoveredAtom.children[0].material.emissive.set(0x000000);
+        hoveredAtom = null;
+    }
+}
+
 
 
 // --- MULAI APLIKASI ---
