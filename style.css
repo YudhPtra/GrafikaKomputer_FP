@@ -1,46 +1,163 @@
+/* Mendefinisikan variabel warna global untuk konsistensi tema. */
 :root {
     --primary-bg: #f0f2f5;
     --secondary-bg: #ffffff;
-    --sidebar-bg: #2c3e50;
+    --sidebar-bg: #1e293b;
     --text-color: #333;
-    --light-text: #ecf0f1;
-    --accent-color: #3498db;
+    --light-text: #e2e8f0;
+    --accent-color: #38bdf8;
     --border-color: #e0e0e0;
     --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
+/* Pengaturan dasar untuk body, termasuk font dan warna latar. */
 body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        Helvetica, Arial, sans-serif;
     background-color: var(--primary-bg);
     color: var(--text-color);
-    overflow: hidden; 
+    overflow: hidden; /* Mencegah scroll pada level body. */
 }
 
+/* Kontainer untuk sidebar agar posisinya tetap di layar. */
 #app-container {
-    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
     height: 100vh;
+    z-index: 10;
+    pointer-events: none; /* Agar tidak menghalangi interaksi dengan elemen di belakangnya. */
 }
+
+/* Pengaturan utama untuk sidebar, termasuk transisi animasi. */
 #sidebar {
-    width: 240px;
+    width: 260px;
+    height: 100%;
     background-color: var(--sidebar-bg);
     color: var(--light-text);
     padding: 20px;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
     overflow-y: auto;
-    z-index: 10;
-}
-#main-content {
-    flex-grow: 1;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(0);
     position: relative;
+    flex-shrink: 0;
+    pointer-events: all; /* Mengaktifkan kembali interaksi khusus untuk sidebar. */
+    box-sizing: border-box;
 }
+
+/* State ketika sidebar disembunyikan (digeser ke kiri). */
+#sidebar.collapsed {
+    transform: translateX(-100%);
+}
+
+/* Tombol hamburger menu untuk toggle sidebar. */
+#sidebar-toggle {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 40px;
+    height: 40px;
+    background-color: var(--sidebar-bg);
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 1001; /* Selalu di atas elemen lain. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: transform 0.3s ease;
+}
+
+#sidebar-toggle svg {
+    fill: var(--accent-color);
+    transition: transform 0.3s ease;
+}
+
+#sidebar-toggle .line {
+    transition: y 0.3s ease-in-out, transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    transform-origin: center;
+}
+
+/* Kontainer utama untuk konten visualisasi 3D. */
+#main-content {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+    overflow: hidden;
+}
+
+/* Area canvas tempat render 3D ditampilkan. */
 #canvas-container {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+    cursor: grab; /* Mengubah kursor saat bisa di-drag. */
 }
-#info-panel {
+
+#canvas-container:active {
+    cursor: grabbing;
+}
+
+/* Panel untuk menampilkan informasi detail atom di kanan atas. */
+#detail-info-panel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    width: 400px;
+    max-width: 400px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateX(0);
+    scroll-behavior: smooth;
+    flex-shrink: 0;
+}
+
+/* State tersembunyi untuk panel info detail. */
+#detail-info-panel.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(20px);
+}
+
+#detail-info-panel h2 {
+    margin: 0 0 15px 0;
+    padding-right: 30px;
+    font-size: 1.3em;
+    color: var(--sidebar-bg);
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--accent-color);
+}
+
+.info-section h3 {
+    font-size: 1.1em;
+    color: var(--accent-color);
+    margin-top: 15px;
+    margin-bottom: 8px;
+}
+
+.info-section p {
+    font-size: 0.9em;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Panel untuk menampilkan info molekul di kiri bawah. */
+#molecule-info-panel {
     position: absolute;
     bottom: 20px;
     left: 20px;
@@ -50,42 +167,100 @@ body {
     box-shadow: var(--shadow);
     max-width: 300px;
     border: 1px solid var(--border-color);
-    transition: opacity 0.3s ease;
-}
-#info-panel.hidden {
-    opacity: 0;
-    pointer-events: none;
-}
-#info-panel h2 {
-    margin: 0 0 10px 0;
-    font-size: 1.2em;
-    color: var(--accent-color);
-}
-#info-panel p {
-    margin: 0;
-    font-size: 0.9em;
+    /* Transisi untuk posisi 'left' agar bergerak mulus saat sidebar muncul/hilang. */
+    transition: opacity 0.3s ease, transform 0.3s ease, left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(0);
+    z-index: 50;
 }
 
+/* Menyesuaikan posisi panel info saat sidebar tertutup. */
+body.sidebar-collapsed #molecule-info-panel {
+    left: 20px;
+}
+
+/* Menyesuaikan posisi panel info saat sidebar terbuka. */
+body:not(.sidebar-collapsed) #molecule-info-panel {
+    left: calc(260px + 20px);
+}
+
+#molecule-info-panel.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
+}
+
+#molecule-info-panel h2 {
+    margin: 0 0 10px 0;
+    padding-right: 25px;
+    font-size: 1.2em;
+    color: var(--sidebar-bg);
+}
+
+#molecule-info-panel p {
+    margin: 0;
+    font-size: 0.9em;
+    line-height: 1.5;
+}
+
+/* Pengaturan umum untuk tombol close (x) di setiap panel. */
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 30px;
+    height: 30px;
+    background-color: #f0f2f5;
+    border: none;
+    border-radius: 50%;
+    font-size: 20px;
+    line-height: 30px;
+    text-align: center;
+    cursor: pointer;
+    color: #888;
+    transition: all 0.2s ease;
+}
+
+#molecule-info-panel .close-btn {
+    top: 10px;
+    right: 10px;
+    width: 25px;
+    height: 25px;
+    font-size: 16px;
+    line-height: 25px;
+}
+
+/* Efek hover untuk tombol close. */
+.close-btn:hover {
+    background-color: #e0e0e0;
+    color: #333;
+    transform: rotate(90deg);
+}
+
+/* Styling untuk header di dalam sidebar. */
 .sidebar-header {
     font-size: 1.5em;
     text-align: center;
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #34495e;
+    border-bottom: 1px solid #334155;
 }
+
 .sidebar-module h3 {
     color: var(--accent-color);
     margin-top: 25px;
     margin-bottom: 10px;
     font-size: 1.1em;
 }
+
 .btn-group {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
+
+/* Pengaturan umum untuk tombol-tombol di sidebar. */
 .btn {
-    background-color: #34495e;
+    background-color: #334155;
     color: var(--light-text);
     border: none;
     padding: 10px 15px;
@@ -94,13 +269,125 @@ body {
     cursor: pointer;
     transition: background-color 0.2s ease, transform 0.2s ease;
     width: 100%;
+    position: relative;
 }
-.btn:hover {
+
+.btn:hover:not(:disabled) {
     background-color: var(--accent-color);
     transform: translateX(5px);
 }
+
+/* State aktif untuk tombol yang sedang dipilih. */
 .btn.active {
-     background-color: var(--accent-color);
-     font-weight: bold;
+    background-color: var(--accent-color);
+    font-weight: bold;
 }
 
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.molecule-entry {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* Menu detail (dropdown) di dalam sidebar, awalnya tersembunyi. */
+.detail-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 5px;
+    max-height: 0; /* Digunakan untuk animasi buka/tutup. */
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out;
+}
+
+/* State terlihat untuk menu detail. */
+.detail-menu.visible {
+    max-height: 500px; /* Nilai yang cukup besar untuk menampung konten. */
+}
+
+/* Tombol navigasi di dalam menu detail. */
+.btn-detail-nav {
+    background-color: #2c3a4f;
+    color: #aeb8c5;
+    border: none;
+    padding: 8px 15px;
+    font-size: 0.8em;
+    text-align: left;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding-left: 30px;
+}
+
+.btn-detail-nav.active {
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+.btn-detail-nav:hover {
+    background-color: var(--accent-color);
+    color: var(--sidebar-bg);
+    transform: translateX(5px);
+}
+
+.detail-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2em;
+    color: #aeb8c5;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+    padding: 5px;
+}
+
+/* Memutar ikon panah saat menu detail terbuka. */
+.detail-menu.visible ~ .detail-icon {
+    transform: translateY(-50%) rotate(90deg);
+}
+
+.btn.active .detail-icon {
+    color: var(--sidebar-bg);
+}
+
+.btn:hover .detail-icon {
+    color: var(--sidebar-bg);
+}
+
+/* Tombol 'Kembali' yang muncul saat dalam mode detail. */
+.back-btn {
+    position: absolute;
+    top: 20px;
+    left: calc(260px + 20px); /* Posisi awal saat sidebar terbuka. */
+    background-color: rgba(30, 41, 59, 0.8);
+    color: var(--light-text);
+    border: 1px solid var(--accent-color);
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    z-index: 100;
+    opacity: 1;
+    transition: opacity 0.3s ease, transform 0.2s ease, left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.9em;
+}
+
+/* Menyesuaikan posisi tombol 'Kembali' saat sidebar tertutup. */
+body.sidebar-collapsed .back-btn {
+    left: 80px;
+}
+
+.back-btn:hover {
+    background-color: var(--accent-color);
+    transform: scale(1.05);
+}
+
+.back-btn.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
