@@ -10,7 +10,6 @@ import { Sky } from 'three/addons/objects/Sky.js';
 
 // DATA: Objek utama yang menyimpan semua informasi tentang atom dan molekul.
 const DATA = {
-<<<<<<< HEAD
     atoms: {
         H: { name: "Hidrogen", symbol: "H", color: 0xffffff, atomicNumber: 1, atomicMass: "1.008 u", electrons: [1], radius: 0.7, details: [
             { title: "Etimologi & Sejarah", content: "Nama 'hidrogen' diberikan oleh Antoine Lavoisier pada tahun 1783, berasal dari kata Yunani 'hydro' (air) dan 'genes' (membentuk)..." },
@@ -46,49 +45,6 @@ const DATA = {
             { title: "Peran Biologis", content: "Tumbuhan menggunakan karbondioksida selama fotosintesis untuk membuat makanan." }
         ]},
     },
-=======
-     atoms: {
-        H: { 
-            name: 'Hidrogen', 
-            symbol: 'H', 
-            color: 0xffffff,
-            atomicNumber: 1,
-            atomicMass: "1.008 u",
-            description: "Hidrogen adalah atom paling ringan dan unsur paling melimpah di alam semesta."
-        },
-        C: { 
-            name: 'Karbon', 
-            symbol: 'C', 
-            color: 0x282828,
-            atomicNumber: 6,
-            atomicMass: "12.011 u",
-            description: "Karbon adalah dasar dari semua kehidupan, dapat membentuk ikatan kovalen kompleks."
-        },
-        O: { 
-            name: 'Oksigen', 
-            symbol: 'O', 
-            color: 0xff0000,
-            atomicNumber: 8,
-            atomicMass: "15.999 u",
-            description: "Oksigen sangat penting untuk respirasi, membentuk 21% atmosfer bumi."
-        },
-    },
-    molecules: {
-        // (molekul tetap sama seperti sebelumnya)
-        H2O: { 
-            name: 'Air (H₂O)', 
-            description: 'Molekul polar dengan bentuk tekuk/bent (~104.5°).  Memiliki muatan parsial negatif pada Oksigen dan positif pada Hidrogen'
-        },
-        CH4: {
-            name: 'Metana (CH₄)',
-            description: 'Molekul nonpolar dengan bentuk tetrahedral (~109.5°). Komponen utama gas alam.'
-        },
-        CO2: {
-            name: 'Karbondioksida (CO₂)',
-            description: 'Molekul nonpolar dengan bentuk linear. Terdiri dari ikatan kovalen rangkap dua.'
-        }
-    }
->>>>>>> 05e6ddbb9c1070bc316a9f7d12ac1c2ca9749661
 };
 
 // Variabel global untuk scene Three.js, elemen DOM, dan state management.
@@ -105,7 +61,6 @@ let raycaster = new THREE.Raycaster();
 let mouse = new THREE.Vector2();
 const clock = new THREE.Clock();
 
-<<<<<<< HEAD
 // Variabel untuk animasi elektron.
 let electronShells = [], electronsToAnimate = [];
 let isAnimationPaused = false;
@@ -117,13 +72,6 @@ let activeState = { type: 'molecule', key: 'H2O', menu: null };
 const backButton = document.getElementById('back-btn');
 
 // Inisialisasi scene 3D, kamera, renderer, dan kontrol.
-=======
-let raycaster = new THREE.Raycaster();
-let mouse = new THREE.Vector2();
-
-
-
->>>>>>> 05e6ddbb9c1070bc316a9f7d12ac1c2ca9749661
 function init() {
     body.classList.add('sidebar-collapsed');
     scene = new THREE.Scene();
@@ -139,7 +87,6 @@ function init() {
     renderer.toneMappingExposure = 0.5;  
     canvasContainer.appendChild(renderer.domElement);
     
-<<<<<<< HEAD
     // Setup skybox.
     sky = new Sky();
     sky.scale.setScalar(450000);
@@ -161,18 +108,6 @@ function init() {
     guiChanged();
     
     // Grup utama untuk menampung semua objek molekul.
-=======
-    labelRenderer = new CSS2DRenderer();
-    labelRenderer.setSize(window.innerWidth, window.innerHeight);
-    labelRenderer.domElement.style.position = 'absolute';
-    labelRenderer.domElement.style.top = '0px';
-    labelRenderer.domElement.style.pointerEvents = 'none'; 
-    document.body.appendChild(labelRenderer.domElement);
-
-    renderer.domElement.addEventListener('click', onClick, false);
-
-
->>>>>>> 05e6ddbb9c1070bc316a9f7d12ac1c2ca9749661
     mainGroup = new THREE.Group();
     scene.add(mainGroup);
     
@@ -280,110 +215,7 @@ function clearScene() {
     }
 }
 
-<<<<<<< HEAD
 // Menampilkan visualisasi molekul berdasarkan key.
-=======
-function updateInfoPanel(title, description) {
-    document.getElementById('info-title').textContent = title;
-    document.getElementById('info-description').textContent = description;
-}
-
-function updateActiveButton(targetButton) {
-    document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
-    if(targetButton) {
-        targetButton.classList.add('active');
-    }
-}
-
-// --- FUNGSI DRAWING ---
-
-function createAtomMesh(radius, color, symbol, charge = null, chargeColor = 0xffffff) {
-    const atomGroup = new THREE.Group();
-
-    const sphereGeometry = new THREE.SphereGeometry(radius, 32, 32);
-    const sphereMaterial = new THREE.MeshPhysicalMaterial({
-        color: color,
-        transmission: 0.9,
-        roughness: 0.3,
-        metalness: 0.0,      
-        reflectivity: 0.2,
-        ior: 1.5,
-        thickness: 0.8,
-        transparent: true,
-        opacity: 0.7,
-    });
-    const atomSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-    atomSphere.castShadow = true;
-    atomSphere.receiveShadow = true;
-    atomGroup.add(atomSphere);
-
-    // --- IMPORTANT: set userData on the group so clicking text/mesh still identifies the atom ---
-    atomGroup.userData = { type: 'atom', symbol: symbol };
-
-    if (defaultFont) {
-        const textGroup = new THREE.Group();
-        atomGroup.add(textGroup);
-        textLabelsToBillboard.push(textGroup);
-
-        const textGeometry = new TextGeometry(symbol, {
-            font: defaultFont,
-            size: radius * (charge ? 0.6 : 0.8),
-            height: 0.1,
-            curveSegments: 12,
-        });
-        textGeometry.center(); 
-        
-        const textMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0xffffff,
-            emissive: 0xffffff,
-            emissiveIntensity: 0.6,
-            depthTest: false,
-        });
-        const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-        if (charge) textMesh.position.y = radius * 0.2;
-        textGroup.add(textMesh);
-
-        if (charge) {
-            const chargeGeometry = new TextGeometry(charge, {
-                font: defaultFont,
-                size: radius * 0.5,
-                height: 0.05,
-                curveSegments: 12,
-            });
-            chargeGeometry.center();
-            
-            const chargeMaterial = new THREE.MeshStandardMaterial({ 
-                color: chargeColor,
-                emissive: chargeColor,
-                emissiveIntensity: 0.8,
-                depthTest: false,
-            });
-            const chargeMesh = new THREE.Mesh(chargeGeometry, chargeMaterial);
-            chargeMesh.position.y = -radius * 0.35;
-            textGroup.add(chargeMesh); 
-        }
-    }
-
-    return atomGroup;
-}
-
-
-
-function createBondMesh(pos1, pos2, radius = 0.1) {
-     const direction = new THREE.Vector3().subVectors(pos2, pos1);
-     const orientation = new THREE.Matrix4();
-     orientation.lookAt(pos1, pos2, new THREE.Object3D().up);
-     orientation.multiply(new THREE.Matrix4().makeRotationX(Math.PI / 2));
-     const geometry = new THREE.CylinderGeometry(radius, radius, direction.length(), 16, 1);
-     const bond = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0xcccccc, transparent: true, opacity: 0.4, roughness: 0.8 }));
-     bond.castShadow = true;
-     bond.receiveShadow = true;
-     bond.applyMatrix4(orientation);
-     bond.position.copy(pos1).add(direction.multiplyScalar(0.5));
-     return bond;
-}
-
->>>>>>> 05e6ddbb9c1070bc316a9f7d12ac1c2ca9749661
 function displayMolecule(moleculeKey) {
     clearScene();
     const moleculeData = DATA.molecules[moleculeKey];
@@ -889,7 +721,6 @@ function drawCarbonDioxide() {
     mainGroup.add(createBondMesh(c.position.clone().setY(doubleBondOffset), o2.position.clone().setY(doubleBondOffset), 0.08));
     mainGroup.add(createBondMesh(c.position.clone().setY(-doubleBondOffset), o2.position.clone().setY(-doubleBondOffset), 0.08));
 }
-<<<<<<< HEAD
 
 // Mendeteksi atom mana yang sedang ditunjuk oleh kursor mouse.
 function getHoveredAtom() {
@@ -933,40 +764,6 @@ function onMouseMove(event) {
             if(lastHoveredAtom) {
                 const material = lastHoveredAtom.children[0].material;
                 material.emissiveIntensity = lastHoveredAtom.userData.originalEmissive;
-=======
-function displayAtom(atomKey) {
-    clearScene();
-    const atomData = DATA.atoms[atomKey];
-    if (!atomData) return;
-
-    // Buat satu atom besar
-    const atom = createAtomMesh(1.2, atomData.color, atomData.symbol);
-    mainGroup.add(atom);
-
-    // Panel info
-    const infoText = `
-        Nomor Atom: ${atomData.atomicNumber}<br>
-        Massa Atom: ${atomData.atomicMass}<br><br>
-        ${atomData.description}
-    `;
-    updateInfoPanel(atomData.name, infoText);
-
-    controls.target.set(0, 0, 0);
-    camera.position.set(0, 0, 6);
-}
-
-
-function setupUIListeners() {
-    document.querySelectorAll('.btn').forEach(button => {
-        button.addEventListener('click', (event) => {
-            const type = event.target.dataset.type;
-            const key = event.target.dataset.key;
-            updateActiveButton(event.target);
-            if (type === 'atom') {
-                displayAtom(key);
-            } else if (type === 'molecule') {
-                displayMolecule(key);
->>>>>>> 05e6ddbb9c1070bc316a9f7d12ac1c2ca9749661
             }
             lastHoveredAtom = null;
             canvasContainer.style.cursor = 'grab';
@@ -974,7 +771,6 @@ function setupUIListeners() {
     }
 }
 
-<<<<<<< HEAD
 // Memuat library TWEEN.js dan memulai inisialisasi setelah selesai.
 const tweenScript = document.createElement('script');
 tweenScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/tween.js/20.0.3/tween.umd.js';
@@ -990,33 +786,3 @@ tweenScript.onload = () => {
     requestAnimationFrame(animateTween);
     init(); // Panggil fungsi init utama setelah TWEEN siap.
 };
-=======
-function onClick(event) {
-    // Hitung posisi mouse normalisasi (-1..1)
-    const rect = renderer.domElement.getBoundingClientRect();
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-    raycaster.setFromCamera(mouse, camera);
-
-    // Cari objek yang kena ray
-    const intersects = raycaster.intersectObjects(mainGroup.children, true);
-
-   if (intersects.length > 0) {
-    // cari object teratas yang punya userData.type === 'atom'
-    let obj = intersects[0].object;
-    while (obj && !obj.userData?.type) {
-        obj = obj.parent;
-    }
-    if (obj && obj.userData && obj.userData.type === 'atom') {
-        displayAtom(obj.userData.symbol);
-    }
-}
-
-}
-
-
-// --- MULAI APLIKASI ---
-init();
-
->>>>>>> 05e6ddbb9c1070bc316a9f7d12ac1c2ca9749661

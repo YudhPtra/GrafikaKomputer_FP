@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<<<<<<< HEAD
 <html lang="id">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,7 +9,6 @@
 </head>
 
 <body>
-    <!-- Tombol untuk menampilkan atau menyembunyikan sidebar navigasi. -->
     <button id="sidebar-toggle">
         <svg viewBox="0 0 100 80" width="18" height="18">
             <rect class="line top" y="0" width="100" height="15" rx="8"></rect>
@@ -18,23 +17,19 @@
         </svg>
     </button>
 
-    <!-- Konten utama yang berisi visualisasi 3D dan panel informasi. -->
     <main id="main-content">
         <div id="canvas-container"></div>
 
-        <!-- Tombol untuk kembali ke tampilan utama. -->
         <button id="back-btn" class="back-btn hidden">
             &larr; Kembali
         </button>
 
-        <!-- Panel untuk menampilkan informasi umum tentang molekul. -->
         <div id="molecule-info-panel" class="hidden">
             <button id="close-molecule-info-btn" class="close-btn">&times;</button>
             <h2 id="molecule-info-title"></h2>
             <p id="molecule-info-description"></p>
         </div>
 
-        <!-- Panel untuk menampilkan informasi detail tentang atom. -->
         <div id="detail-info-panel" class="hidden">
             <button id="close-detail-info-btn" class="close-btn">&times;</button>
             <h2 id="detail-info-title"></h2>
@@ -42,68 +37,24 @@
         </div>
     </main>
 
-    <!-- Kontainer untuk sidebar navigasi. -->
     <div id="app-container">
         <nav id="sidebar" class="collapsed">
             <div id="sidebar-content">
-                <!-- Konten di dalam sidebar akan diisi oleh JavaScript. -->
             </div>
         </nav>
-=======
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MolecuViz - v0.6</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <div id="app-container">
-      <nav id="sidebar">
-        <h1 class="sidebar-header">MolecuViz</h1>
-
-        <div class="sidebar-module">
-          <h3>Galeri Molekul</h3>
-          <div class="btn-group" id="molecule-buttons">
-            <button class="btn active" data-type="molecule" data-key="H2O">
-              Air (H₂O)
-            </button>
-            <button class="btn" data-type="molecule" data-key="CH4">
-              Metana (CH₄)
-            </button>
-            <button class="btn" data-type="molecule" data-key="CO2">
-              Karbondioksida (CO₂)
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      <main id="main-content">
-        <div id="canvas-container"></div>
-        <div id="info-panel">
-          <h2 id="info-title"></h2>
-          <p id="info-description"></p>
-        </div>
-      </main>
->>>>>>> 05e6ddbb9c1070bc316a9f7d12ac1c2ca9749661
     </div>
 
-    <!-- Mendefinisikan path untuk impor modul JavaScript seperti Three.js. -->
     <script type="importmap">
-      {
-        "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
         }
-      }
     </script>
 
-    <!-- Menghubungkan file JavaScript utama yang berisi logika aplikasi. -->
     <script type="module" src="script.js"></script>
-<<<<<<< HEAD
 </body>
 
-=======
-  </body>
->>>>>>> 05e6ddbb9c1070bc316a9f7d12ac1c2ca9749661
 </html>
+
