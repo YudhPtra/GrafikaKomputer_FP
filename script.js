@@ -143,7 +143,8 @@ function init() {
     fontLoader.load("https://cdn.jsdelivr.net/npm/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json", (font) => {
         defaultFont = font;
         buildSidebar();
-        displayMolecule("H2O");
+        enterClassroom();
+        // displayMolecule("H2O");
         setupUIListeners();
         animate();
     });
@@ -156,6 +157,8 @@ function animate() {
     controls.update();
     
     const delta = clock.getDelta();
+    updatePlayer(delta);
+    updateMoleculeProximity();
     
     // Menganimasikan pergerakan elektron di orbitnya.
     if (!isAnimationPaused && electronsToAnimate.length > 0) {
@@ -786,3 +789,329 @@ tweenScript.onload = () => {
     requestAnimationFrame(animateTween);
     init(); // Panggil fungsi init utama setelah TWEEN siap.
 };
+
+// ---------- Classroom & Player: tambahan global ----------
+const desks = [];
+const deskBoxes = []; // Box3 for collision checks
+const moleculesOnDesks = []; // { mesh: Group, key: 'H2O' }
+let player = null;
+const PLAYER_RADIUS = 0.45;
+const INTERACTION_RADIUS = 2.0;
+let currentNearbyMol = null;
+let interactionPromptEl = null;
+const moveState = { forward:false, back:false, left:false, right:false };
+
+// ---------- Create a basic desk ----------
+function createDesk(width = 2, depth = 1.2, height = 0.8) {
+    const geom = new THREE.BoxGeometry(width, height, depth);
+    const mat = new THREE.MeshStandardMaterial({ color: 0x8B5A2B, roughness: 0.8 });
+    const desk = new THREE.Mesh(geom, mat);
+    desk.castShadow = true;
+    desk.receiveShadow = true;
+    return desk;
+}
+
+// ---------- Create a small instance of molecule (returns THREE.Group) ----------
+function createMoleculeInstance(moleculeKey) {
+    // Reuse your createAtomMesh & createBondMesh functions (they return mesh/group)
+    const g = new THREE.Group();
+    switch(moleculeKey) {
+        case "H2O": {
+            const o = createAtomMesh(0.35, DATA.atoms.O.color, 'O');
+            const h1 = createAtomMesh(0.25, DATA.atoms.H.color, 'H');
+            const h2 = createAtomMesh(0.25, DATA.atoms.H.color, 'H');
+            const angle = (104.5 * Math.PI) / 180;
+            const bondLength = 0.9;
+            h1.position.set(bondLength * Math.cos(angle/2), bondLength * Math.sin(angle/2), 0);
+            h2.position.set(bondLength * Math.cos(angle/2), -bondLength * Math.sin(angle/2), 0);
+            g.add(o, h1, h2);
+            g.add(createBondMesh(o.position.clone(), h1.position.clone(), 0.04));
+            g.add(createBondMesh(o.position.clone(), h2.position.clone(), 0.04));
+            break;
+        }
+        case "CH4": {
+            const c = createAtomMesh(0.4, DATA.atoms.C.color, 'C');
+            const positions = [
+                new THREE.Vector3(0.9, 0.9, 0.9),
+                new THREE.Vector3(0.9, -0.9, -0.9),
+                new THREE.Vector3(-0.9, 0.9, -0.9),
+                new THREE.Vector3(-0.9, -0.9, 0.9)
+            ];
+            g.add(c);
+            positions.forEach(pos => {
+                const h = createAtomMesh(0.22, DATA.atoms.H.color, 'H');
+                h.position.copy(pos.normalize().multiplyScalar(1.4));
+                g.add(h);
+                g.add(createBondMesh(c.position.clone(), h.position.clone(), 0.03));
+            });
+            break;
+        }
+        case "CO2": {
+            const c = createAtomMesh(0.38, DATA.atoms.C.color, 'C');
+            const o1 = createAtomMesh(0.35, DATA.atoms.O.color, 'O');
+            const o2 = createAtomMesh(0.35, DATA.atoms.O.color, 'O');
+            const bondLength = 1.4;
+            o1.position.x = -bondLength;
+            o2.position.x = bondLength;
+            g.add(c, o1, o2);
+            const off = 0.06;
+            g.add(createBondMesh(c.position.clone().setY(off), o1.position.clone().setY(off), 0.03));
+            g.add(createBondMesh(c.position.clone().setY(-off), o1.position.clone().setY(-off), 0.03));
+            g.add(createBondMesh(c.position.clone().setY(off), o2.position.clone().setY(off), 0.03));
+            g.add(createBondMesh(c.position.clone().setY(-off), o2.position.clone().setY(-off), 0.03));
+            break;
+        }
+        default: {
+            // fallback: small sphere
+            const s = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), new THREE.MeshStandardMaterial({ color: 0xaaaaaa }));
+            g.add(s);
+        }
+    }
+    // give a name for debug
+    g.userData.moleculeKey = moleculeKey;
+    return g;
+}
+
+// ---------- Setup classroom: floor + desks + molecules ----------
+function setupClassroom(rows = 3, cols = 4) {
+    // floor
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshStandardMaterial({ color: 0xeeeeee }));
+    floor.rotation.x = -Math.PI/2;
+    floor.receiveShadow = true;
+    mainGroup.add(floor);
+
+    const spacingX = 3.2, spacingZ = 2.8;
+    const deskW = 2.0, deskD = 1.2, deskH = 0.8;
+    const moleculeKeys = Object.keys(DATA.molecules);
+
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const desk = createDesk(deskW, deskD, deskH);
+            desk.position.set((c - (cols-1)/2) * spacingX, deskH/2, (r - (rows-1)/2) * spacingZ);
+            mainGroup.add(desk);
+            desks.push(desk);
+
+            // store bounding box (update when added to scene)
+            const box = new THREE.Box3().setFromObject(desk);
+            deskBoxes.push(box);
+            desk.userData.boundingBox = box;
+
+            // place a molecule on the desk (1 per desk)
+            const molKey = moleculeKeys[(r*cols + c) % moleculeKeys.length];
+            const molInstance = createMoleculeInstance(molKey);
+            // small scale so it fits on desk
+            molInstance.scale.setScalar(0.9);
+            molInstance.position.set(0, deskH/2 + 0.25, 0); // top center of desk
+            desk.add(molInstance);
+            moleculesOnDesks.push({ mesh: molInstance, key: molKey, desk });
+        }
+    }
+}
+
+// ---------- Create player object and visuals ----------
+function setupPlayer() {
+    player = new THREE.Object3D();
+    player.position.set(0, PLAYER_RADIUS, 6);
+    // visible capsule-ish body for debug (replace with GLTF if desired)
+    const bodyGeo = new THREE.CapsuleGeometry(PLAYER_RADIUS, 0.5, 4, 8);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3366ff, metalness: 0.2, roughness: 0.6, transparent: true, opacity: 0.9 });
+    const playerMesh = new THREE.Mesh(bodyGeo, bodyMat);
+    playerMesh.castShadow = true;
+    player.add(playerMesh);
+    mainGroup.add(player);
+
+    // create on-screen prompt element
+    interactionPromptEl = document.createElement('div');
+    interactionPromptEl.id = 'interaction-hint';
+    interactionPromptEl.style.position = 'fixed';
+    interactionPromptEl.style.left = '50%';
+    interactionPromptEl.style.transform = 'translateX(-50%)';
+    interactionPromptEl.style.bottom = '28px';
+    interactionPromptEl.style.padding = '10px 16px';
+    interactionPromptEl.style.background = 'rgba(0,0,0,0.6)';
+    interactionPromptEl.style.color = '#fff';
+    interactionPromptEl.style.borderRadius = '8px';
+    interactionPromptEl.style.fontFamily = 'sans-serif';
+    interactionPromptEl.style.fontSize = '14px';
+    interactionPromptEl.style.pointerEvents = 'none';
+    interactionPromptEl.style.opacity = '0';
+    interactionPromptEl.style.transition = 'opacity 0.2s';
+    interactionPromptEl.textContent = '';
+    document.body.appendChild(interactionPromptEl);
+
+    // disable OrbitControls while in classroom (we'll control camera manually)
+    controls.enabled = false;
+}
+
+// ---------- Movement input ----------
+window.addEventListener('keydown', (e) => {
+    const k = e.key.toLowerCase();
+    if (k === 'w') moveState.forward = true;
+    if (k === 's') moveState.back = true;
+    if (k === 'a') moveState.left = true;
+    if (k === 'd') moveState.right = true;
+
+    // interact
+    if (k === 'e' && currentNearbyMol) {
+        const mol = DATA.molecules[currentNearbyMol.key];
+        if (mol) updateMoleculeInfoPanel(mol.name, mol.description);
+    }
+});
+window.addEventListener('keyup', (e) => {
+    const k = e.key.toLowerCase();
+    if (k === 'w') moveState.forward = false;
+    if (k === 's') moveState.back = false;
+    if (k === 'a') moveState.left = false;
+    if (k === 'd') moveState.right = false;
+});
+
+// ---------- Player update (call from animate) ----------
+function updatePlayer(delta) {
+  if (!player) return;
+
+  const moveSpeed = 4.0;
+  const dir = new THREE.Vector3();
+
+  if (moveState.forward) dir.z -= 1;
+  if (moveState.back) dir.z += 1;
+  if (moveState.left) dir.x -= 1;
+  if (moveState.right) dir.x += 1;
+
+  if (dir.lengthSq() > 0) {
+    dir.normalize();
+
+    // arah kamera (tanpa pitch)
+    const forward = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw)).normalize();
+    const right = new THREE.Vector3(forward.z, 0, -forward.x).normalize();
+
+    const worldDir = new THREE.Vector3();
+    worldDir.addScaledVector(forward, dir.z);
+    worldDir.addScaledVector(right, dir.x);
+    worldDir.normalize();
+
+    const proposed = player.position.clone().add(worldDir.multiplyScalar(moveSpeed * delta));
+
+    // sederhana: belum pakai collision
+    player.position.copy(proposed);
+
+    // rotasi player ke arah gerak
+    const lookAt = player.position.clone().add(worldDir);
+    // player.lookAt(lookAt);
+    player.quaternion.slerp(
+  new THREE.Quaternion().setFromRotationMatrix(
+    new THREE.Matrix4().lookAt(player.position, lookAt, new THREE.Vector3(0, 1, 0))
+  ),
+  0.2
+);
+  }
+
+  // update posisi & arah kamera berdasarkan yaw/pitch
+  const camOffset = new THREE.Vector3(
+    Math.sin(yaw) * cameraDistance,
+    cameraHeight + Math.sin(pitch) * 2,
+    Math.cos(yaw) * cameraDistance
+  );
+
+  const desiredCamPos = player.position.clone().add(camOffset);
+  camera.position.lerp(desiredCamPos, 0.15);
+
+  // kamera selalu melihat ke player
+  camera.lookAt(player.position.clone().add(new THREE.Vector3(0, 1, 0)));
+}
+
+
+// ---------- Proximity check for molecules (call from animate) ----------
+function updateMoleculeProximity() {
+    if (!player) return;
+    let found = null;
+    const playerPos = player.position;
+    for (const entry of moleculesOnDesks) {
+        const worldPos = new THREE.Vector3();
+        entry.mesh.getWorldPosition(worldPos);
+        const d = worldPos.distanceTo(playerPos);
+        if (d < INTERACTION_RADIUS) {
+            found = entry;
+            break;
+        }
+    }
+
+    if (found && currentNearbyMol !== found) {
+        // entered proximity
+        currentNearbyMol = found;
+        interactionPromptEl.textContent = `Tekan E untuk melihat: ${DATA.molecules[found.key].name}`;
+        interactionPromptEl.style.opacity = '1';
+        // highlight: scale up slightly with tween or simple scale
+        found.mesh.scale.setScalar(1.08);
+    } else if (!found && currentNearbyMol) {
+        // left proximity
+        currentNearbyMol.mesh.scale.setScalar(1.0);
+        currentNearbyMol = null;
+        interactionPromptEl.style.opacity = '0';
+        moleculeInfoPanel.classList.add('hidden'); // optional: auto-hide
+    }
+}
+
+// ---------- Enter classroom mode ----------
+function enterClassroom() {
+    clearScene(); // reuse your clearScene to remove previous objects
+    activeState = { type: 'classroom', key: null, menu: null };
+    setupClassroom(3, 4);
+    setupPlayer();
+    // recompute deskBoxes (make sure Box3 values are correct in world-space)
+    deskBoxes.length = 0;
+    desks.forEach(d => {
+        const b = new THREE.Box3().setFromObject(d);
+        deskBoxes.push(b);
+        d.userData.boundingBox = b;
+    });
+    // position camera initially behind player
+    camera.position.set(player.position.x, player.position.y + 2.0, player.position.z + 4.5);
+    camera.lookAt(player.position);
+    controls.enabled = false;
+    buildSidebar(); // optional: update sidebar for classroom mode
+}
+
+// ---------- Integrasi ke animate() ----------
+/* Di dalam fungsi animate() yang sudah ada, tambahkan:
+   updatePlayer(delta);
+   updateMoleculeProximity();
+   (pastikan ini dipanggil sebelum composer.render())
+*/
+
+// Camera rotation control
+let yaw = 0;      // rotasi horizontal
+let pitch = 0;    // rotasi vertikal
+const cameraDistance = 4.5;
+const cameraHeight = 2.0;
+let isMouseDown = false;
+let lastMouseX = 0;
+let lastMouseY = 0;
+
+// Mouse control for camera rotation
+window.addEventListener("mousedown", (e) => {
+  isMouseDown = true;
+  lastMouseX = e.clientX;
+  lastMouseY = e.clientY;
+});
+
+window.addEventListener("mouseup", () => {
+  isMouseDown = false;
+});
+
+window.addEventListener("mousemove", (e) => {
+  if (!isMouseDown) return;
+  const deltaX = e.clientX - lastMouseX;
+  const deltaY = e.clientY - lastMouseY;
+  lastMouseX = e.clientX;
+  lastMouseY = e.clientY;
+
+  // Adjust rotation sensitivity
+  const sensitivity = 0.003;
+  yaw -= deltaX * sensitivity;
+  pitch -= deltaY * sensitivity;
+
+  // Clamp pitch to avoid flipping
+  pitch = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, pitch));
+});
+
+
