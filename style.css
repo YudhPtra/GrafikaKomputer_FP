@@ -391,3 +391,39 @@ body.sidebar-collapsed .back-btn {
     opacity: 0;
     pointer-events: none;
 }
+
+#molecule-popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 10, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  z-index: 999;
+}
+
+#molecule-popup.hidden {
+  display: none;
+}
+
+#popup-back-btn {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  background: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+#popup-message {
+  position: absolute;
+  bottom: 40px;
+  color: #fff;
+  font-size: 1.2em;
+  text-align: center;
+  max-width: 600px;
+}

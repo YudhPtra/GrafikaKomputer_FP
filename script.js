@@ -1,6 +1,8 @@
 // Import library Three.js dan modul-modul tambahannya.
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { FontLoader } from "three/addons/loaders/FontLoader.js";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
@@ -664,16 +666,27 @@ function createBondMesh(pos1, pos2, radius = 0.1) {
 }
 
 // Router untuk memanggil fungsi gambar molekul yang sesuai.
-function drawMoleculeGeometry(moleculeKey){
-    switch (moleculeKey) {
-      case "H2O": drawWater(); break;
-      case "CH4": drawMethane(); break;
-      case "CO2": drawCarbonDioxide(); break;
-    }
+function drawMoleculeGeometry(moleculeKey) {
+  let group = new THREE.Group();
+
+  switch (moleculeKey) {
+    case "H2O":
+      group = drawWater();
+      break;
+    case "CH4":
+      group = drawMethane();
+      break;
+    case "CO2":
+      group = drawCarbonDioxide();
+      break;
+  }
+
+  return group;
 }
 
 // Menggambar geometri spesifik untuk molekul Air (H2O).
 function drawWater() {
+    const group = new THREE.Group();
     const o = createAtomMesh(0.8, DATA.atoms.O.color, 'O', "-", 0xff8888);
     const h1 = createAtomMesh(0.5, DATA.atoms.H.color, 'H', "+", 0x8888ff);
     const h2 = createAtomMesh(0.5, DATA.atoms.H.color, 'H', "+", 0x8888ff);
@@ -684,29 +697,33 @@ function drawWater() {
     o.userData.initialPosition = o.position.clone();
     h1.userData.initialPosition = h1.position.clone();
     h2.userData.initialPosition = h2.position.clone();
-    mainGroup.add(o, h1, h2);
-    mainGroup.add(createBondMesh(o.position, h1.position, 0.08));
-    mainGroup.add(createBondMesh(o.position, h2.position, 0.08));
+    group.add(o, h1, h2);
+    group.add(createBondMesh(o.position, h1.position, 0.08));
+    group.add(createBondMesh(o.position, h2.position, 0.08));
+     return group; 
 }
 
 // Menggambar geometri spesifik untuk molekul Metana (CH4).
 function drawMethane() {
+      const group = new THREE.Group();
     const c = createAtomMesh(0.9, DATA.atoms.C.color, 'C');
     c.userData.initialPosition = c.position.clone();
-    mainGroup.add(c);
+    group.add(c);
     // Posisi tetrahedral untuk atom hidrogen.
     const positions = [ new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, -1, -1), new THREE.Vector3(-1, 1, -1), new THREE.Vector3(-1, -1, 1) ];
     positions.forEach((pos) => {
         const h = createAtomMesh(0.5, DATA.atoms.H.color, 'H');
         h.position.copy(pos.normalize().multiplyScalar(2.5));
         h.userData.initialPosition = h.position.clone();
-        mainGroup.add(h);
-        mainGroup.add(createBondMesh(c.position, h.position, 0.08));
+        group.add(h);
+        group.add(createBondMesh(c.position, h.position, 0.08));
+        
     });
 }
 
 // Menggambar geometri spesifik untuk molekul Karbondioksida (CO2).
 function drawCarbonDioxide() {
+    const group = new THREE.Group();
     const c = createAtomMesh(0.9, DATA.atoms.C.color, 'C');
     const o1 = createAtomMesh(0.8, DATA.atoms.O.color, 'O');
     const o2 = createAtomMesh(0.8, DATA.atoms.O.color, 'O');
@@ -717,12 +734,13 @@ function drawCarbonDioxide() {
     c.userData.initialPosition = c.position.clone();
     o1.userData.initialPosition = o1.position.clone();
     o2.userData.initialPosition = o2.position.clone();
-    mainGroup.add(c, o1, o2);
+    group.add(c, o1, o2);
     // Gambar dua ikatan untuk setiap atom Oksigen.
-    mainGroup.add(createBondMesh(c.position.clone().setY(doubleBondOffset), o1.position.clone().setY(doubleBondOffset), 0.08));
-    mainGroup.add(createBondMesh(c.position.clone().setY(-doubleBondOffset), o1.position.clone().setY(-doubleBondOffset), 0.08));
-    mainGroup.add(createBondMesh(c.position.clone().setY(doubleBondOffset), o2.position.clone().setY(doubleBondOffset), 0.08));
-    mainGroup.add(createBondMesh(c.position.clone().setY(-doubleBondOffset), o2.position.clone().setY(-doubleBondOffset), 0.08));
+    group.add(createBondMesh(c.position.clone().setY(doubleBondOffset), o1.position.clone().setY(doubleBondOffset), 0.08));
+    group.add(createBondMesh(c.position.clone().setY(-doubleBondOffset), o1.position.clone().setY(-doubleBondOffset), 0.08));
+    group.add(createBondMesh(c.position.clone().setY(doubleBondOffset), o2.position.clone().setY(doubleBondOffset), 0.08));
+    group.add(createBondMesh(c.position.clone().setY(-doubleBondOffset), o2.position.clone().setY(-doubleBondOffset), 0.08));
+    return group;
 }
 
 // Mendeteksi atom mana yang sedang ditunjuk oleh kursor mouse.
@@ -798,17 +816,36 @@ let player = null;
 const PLAYER_RADIUS = 0.45;
 const INTERACTION_RADIUS = 2.0;
 let currentNearbyMol = null;
+let inPopupMode = false;
 let interactionPromptEl = null;
 const moveState = { forward:false, back:false, left:false, right:false };
 
 // ---------- Create a basic desk ----------
-function createDesk(width = 2, depth = 1.2, height = 0.8) {
-    const geom = new THREE.BoxGeometry(width, height, depth);
-    const mat = new THREE.MeshStandardMaterial({ color: 0x8B5A2B, roughness: 0.8 });
-    const desk = new THREE.Mesh(geom, mat);
-    desk.castShadow = true;
-    desk.receiveShadow = true;
-    return desk;
+// function createDesk(width = 2, depth = 1.2, height = 0.8) {
+//     const geom = new THREE.BoxGeometry(width, height, depth);
+//     const mat = new THREE.MeshStandardMaterial({ color: 0x8B5A2B, roughness: 0.8 });
+//     const desk = new THREE.Mesh(geom, mat);
+//     desk.castShadow = true;
+//     desk.receiveShadow = true;
+//     return desk;
+// }
+
+function createDesk() {
+  const deskGroup = new THREE.Group();
+//   const loader = new THREE.GLTFLoader();
+  const loader = new GLTFLoader();
+  loader.load(
+    "models/school_desk.glb", // ganti dengan path model kamu
+    (gltf) => {
+      const deskModel = gltf.scene;
+      deskModel.scale.set(1.2, 1.2, 1.2);
+      deskModel.rotation.y = Math.PI;
+      deskGroup.add(deskModel);
+    },
+    undefined,
+    (err) => console.error("Failed to load desk:", err)
+  );
+  return deskGroup;
 }
 
 // ---------- Create a small instance of molecule (returns THREE.Group) ----------
@@ -872,6 +909,7 @@ function createMoleculeInstance(moleculeKey) {
     return g;
 }
 
+// =========== CLASSROOM MODE : SETUP & PLAYER ===========
 // ---------- Setup classroom: floor + desks + molecules ----------
 function setupClassroom(rows = 3, cols = 4) {
     // floor
@@ -908,17 +946,20 @@ function setupClassroom(rows = 3, cols = 4) {
     }
 }
 
+// ==== Player & Movement in Classroom ====
 // ---------- Create player object and visuals ----------
 function setupPlayer() {
     player = new THREE.Object3D();
     player.position.set(0, PLAYER_RADIUS, 6);
+     mainGroup.add(player);
+  loadCharacter();
     // visible capsule-ish body for debug (replace with GLTF if desired)
-    const bodyGeo = new THREE.CapsuleGeometry(PLAYER_RADIUS, 0.5, 4, 8);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3366ff, metalness: 0.2, roughness: 0.6, transparent: true, opacity: 0.9 });
-    const playerMesh = new THREE.Mesh(bodyGeo, bodyMat);
-    playerMesh.castShadow = true;
-    player.add(playerMesh);
-    mainGroup.add(player);
+    // const bodyGeo = new THREE.CapsuleGeometry(PLAYER_RADIUS, 0.5, 4, 8);
+    // const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3366ff, metalness: 0.2, roughness: 0.6, transparent: true, opacity: 0.9 });
+    // const playerMesh = new THREE.Mesh(bodyGeo, bodyMat);
+    // playerMesh.castShadow = true;
+    // player.add(playerMesh);
+    // mainGroup.add(player);
 
     // create on-screen prompt element
     interactionPromptEl = document.createElement('div');
@@ -952,10 +993,20 @@ window.addEventListener('keydown', (e) => {
     if (k === 'd') moveState.right = true;
 
     // interact
-    if (k === 'e' && currentNearbyMol) {
-        const mol = DATA.molecules[currentNearbyMol.key];
-        if (mol) updateMoleculeInfoPanel(mol.name, mol.description);
-    }
+      if (k === 'e' && currentNearbyMol && !inPopupMode) {
+    enterMoleculePopupMode(currentNearbyMol.key); 
+  }
+//    if (k === 'e' && currentNearbyMol && !inPopupMode) {
+//     const mol = DATA.molecules[currentNearbyMol.key];
+//     if (mol) {
+//         enterMoleculePopupMode(mol, currentNearbyMol.mesh);
+//     }
+// }
+//     document.addEventListener('keydown', (e) => {
+//     if (e.key.toLowerCase() === 'e' && currentNearbyMol) {
+//         enterMoleculePopupMode(currentNearbyMol.key);
+//     }
+//     });
 });
 window.addEventListener('keyup', (e) => {
     const k = e.key.toLowerCase();
@@ -967,6 +1018,8 @@ window.addEventListener('keyup', (e) => {
 
 // ---------- Player update (call from animate) ----------
 function updatePlayer(delta) {
+    if (inPopupMode) return;
+
   if (!player) return;
 
   const moveSpeed = 4.0;
@@ -1022,6 +1075,8 @@ function updatePlayer(delta) {
 
 // ---------- Proximity check for molecules (call from animate) ----------
 function updateMoleculeProximity() {
+    if (inPopupMode) return;
+
     if (!player) return;
     let found = null;
     const playerPos = player.position;
@@ -1051,67 +1106,182 @@ function updateMoleculeProximity() {
     }
 }
 
-// ---------- Enter classroom mode ----------
-function enterClassroom() {
-    clearScene(); // reuse your clearScene to remove previous objects
-    activeState = { type: 'classroom', key: null, menu: null };
-    setupClassroom(3, 4);
-    setupPlayer();
-    // recompute deskBoxes (make sure Box3 values are correct in world-space)
-    deskBoxes.length = 0;
-    desks.forEach(d => {
-        const b = new THREE.Box3().setFromObject(d);
-        deskBoxes.push(b);
-        d.userData.boundingBox = b;
+    // ====================== CLASS ROOM MODE ======================
+    // ---------- Enter classroom mode ----------
+    function enterClassroom() {
+        clearScene(); // reuse your clearScene to remove previous objects
+        activeState = { type: 'classroom', key: null, menu: null };
+        createClassroomEnvironment();
+        setupClassroom(3, 4);
+        setupPlayer();
+        // recompute deskBoxes (make sure Box3 values are correct in world-space)
+        deskBoxes.length = 0;
+        desks.forEach(d => {
+            const b = new THREE.Box3().setFromObject(d);
+            deskBoxes.push(b);
+            d.userData.boundingBox = b;
+        });
+        // position camera initially behind player
+        camera.position.set(player.position.x, player.position.y + 2.0, player.position.z + 4.5);
+        camera.lookAt(player.position);
+        controls.enabled = false;
+        buildSidebar(); // optional: update sidebar for classroom mode
+    }
+
+    // ---------- Integrasi ke animate() ----------
+    /* Di dalam fungsi animate() yang sudah ada, tambahkan:
+    updatePlayer(delta);
+    updateMoleculeProximity();
+    (pastikan ini dipanggil sebelum composer.render())
+    */
+
+    // Camera rotation control
+    let yaw = 0;      // rotasi horizontal
+    let pitch = 0;    // rotasi vertikal
+    const cameraDistance = 4.5;
+    const cameraHeight = 2.0;
+    let isMouseDown = false;
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+
+    // Mouse control for camera rotation
+    window.addEventListener("mousedown", (e) => {
+    isMouseDown = true;
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
     });
-    // position camera initially behind player
-    camera.position.set(player.position.x, player.position.y + 2.0, player.position.z + 4.5);
-    camera.lookAt(player.position);
-    controls.enabled = false;
-    buildSidebar(); // optional: update sidebar for classroom mode
-}
 
-// ---------- Integrasi ke animate() ----------
-/* Di dalam fungsi animate() yang sudah ada, tambahkan:
-   updatePlayer(delta);
-   updateMoleculeProximity();
-   (pastikan ini dipanggil sebelum composer.render())
-*/
+    window.addEventListener("mouseup", () => {
+    isMouseDown = false;
+    });
 
-// Camera rotation control
-let yaw = 0;      // rotasi horizontal
-let pitch = 0;    // rotasi vertikal
-const cameraDistance = 4.5;
-const cameraHeight = 2.0;
-let isMouseDown = false;
-let lastMouseX = 0;
-let lastMouseY = 0;
+    window.addEventListener("mousemove", (e) => {
+    if (!isMouseDown) return;
+    const deltaX = e.clientX - lastMouseX;
+    const deltaY = e.clientY - lastMouseY;
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
 
-// Mouse control for camera rotation
-window.addEventListener("mousedown", (e) => {
-  isMouseDown = true;
-  lastMouseX = e.clientX;
-  lastMouseY = e.clientY;
-});
+    // Adjust rotation sensitivity
+    const sensitivity = 0.003;
+    yaw -= deltaX * sensitivity;
+    pitch -= deltaY * sensitivity;
 
-window.addEventListener("mouseup", () => {
-  isMouseDown = false;
-});
-
-window.addEventListener("mousemove", (e) => {
-  if (!isMouseDown) return;
-  const deltaX = e.clientX - lastMouseX;
-  const deltaY = e.clientY - lastMouseY;
-  lastMouseX = e.clientX;
-  lastMouseY = e.clientY;
-
-  // Adjust rotation sensitivity
-  const sensitivity = 0.003;
-  yaw -= deltaX * sensitivity;
-  pitch -= deltaY * sensitivity;
-
-  // Clamp pitch to avoid flipping
-  pitch = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, pitch));
-});
+    // Clamp pitch to avoid flipping
+    pitch = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, pitch));
+    });
 
 
+
+    let playerMixer = null;
+    let playerModel = null;
+
+    function loadCharacter() {
+    const loader = new GLTFLoader(); // bukan THREE.GLTFLoader()
+    loader.load(
+        "models/chibi_boy.glb",
+        (gltf) => {
+        console.log("Model loaded:", gltf.scene);
+        playerModel = gltf.scene;
+        playerModel.scale.set(0.8, 0.8, 0.8);
+        playerModel.position.set(0, -PLAYER_RADIUS, 0);
+        player.add(playerModel);
+
+        // animasi idle
+        playerMixer = new THREE.AnimationMixer(playerModel);
+        if (gltf.animations.length > 0) {
+            const idleAction = playerMixer.clipAction(gltf.animations[0]);
+            idleAction.play();
+        }
+        },
+        undefined,
+        (error) => console.error("Error loading character:", error)
+    );
+    }
+
+
+    function createClassroomEnvironment() {
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0xe0d6b4 });
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(40, 0.1, 40), floorMat);
+    floor.receiveShadow = true;
+    mainGroup.add(floor);
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0xf2f0eb, side: THREE.BackSide });
+    const walls = new THREE.Mesh(new THREE.BoxGeometry(40, 10, 40), wallMat);
+    walls.position.y = 5;
+    mainGroup.add(walls);
+
+    // papan tulis
+    const board = new THREE.Mesh(
+        new THREE.BoxGeometry(8, 3, 0.2),
+        new THREE.MeshStandardMaterial({ color: 0x003300 })
+    );
+    board.position.set(0, 3, -19.8);
+    mainGroup.add(board);
+
+    // lampu
+    const light = new THREE.PointLight(0xffffff, 1.2, 100);
+    light.position.set(0, 8, 0);
+    light.castShadow = true;
+    mainGroup.add(light);
+    }
+
+    let popupScene, popupCamera, popupRenderer, popupControls;
+    let popupMolecule;
+
+    function enterMoleculePopupMode(moleculeKey) {
+    // Tampilkan overlay popup
+    const popupEl = document.getElementById('molecule-popup');
+    popupEl.classList.remove('hidden');
+
+    // Buat scene baru
+    popupScene = new THREE.Scene();
+    popupCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    popupCamera.position.set(0, 0, 10);
+
+    // Renderer khusus popup
+    const popupCanvas = document.getElementById('molecule-canvas');
+    popupRenderer = new THREE.WebGLRenderer({ canvas: popupCanvas, alpha: true, antialias: true });
+    popupRenderer.setSize(window.innerWidth, window.innerHeight);
+    popupRenderer.setPixelRatio(window.devicePixelRatio);
+
+    // Tambahkan kontrol orbit
+    // popupControls = new THREE.OrbitControls(popupCamera, popupRenderer.domElement);
+    popupControls = new OrbitControls(popupCamera, popupRenderer.domElement);
+    popupControls.enableDamping = true;
+
+    // Lampu
+    const light = new THREE.DirectionalLight(0xffffff, 1.2);
+    light.position.set(5, 10, 5);
+    popupScene.add(light);
+    popupScene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+    // Buat model molekulnya (pakai fungsi yang sudah kamu punya)
+    const moleculeData = DATA.molecules[moleculeKey];
+    popupMolecule = drawMoleculeGeometry(moleculeKey); // Pastikan fungsi ini return Group
+    popupScene.add(popupMolecule);
+
+    // Pesan di bawah
+    const msgEl = document.getElementById('popup-message');
+    msgEl.textContent = moleculeData.description || "Penjelasan molekul ini.";
+
+    // Jalankan animasi render popup
+    function animatePopup() {
+        if (popupScene) {
+        requestAnimationFrame(animatePopup);
+        popupControls.update();
+        popupRenderer.render(popupScene, popupCamera);
+        }
+    }
+    animatePopup();
+    }
+
+    function exitMoleculePopupMode() {
+    const popupEl = document.getElementById('molecule-popup');
+    popupEl.classList.add('hidden');
+
+    // Bersihkan scene popup
+    popupRenderer.dispose();
+    popupScene = null;
+    popupMolecule = null;
+    }
+    document.getElementById('popup-back-btn').addEventListener('click', exitMoleculePopupMode);
