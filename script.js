@@ -11,25 +11,26 @@ import { Sky } from 'three/addons/objects/Sky.js';
 // DATA: Objek utama yang menyimpan semua informasi tentang atom dan molekul.
 const DATA = {
     atoms: {
-        H: { name: "Hidrogen", symbol: "H", color: 0xffffff, atomicNumber: 1, atomicMass: "1.008 u", electrons: [1], radius: 0.7, details: [
+        H: { name: "Hidrogen", symbol: "H", color: 0xffffff, atomicNumber: 1, atomicMass: "1.008 u", electrons: [1], radius: 0.5, details: [
             { title: "Etimologi & Sejarah", content: "Nama 'hidrogen' diberikan oleh Antoine Lavoisier pada tahun 1783, berasal dari kata Yunani 'hydro' (air) dan 'genes' (membentuk)..." },
             { title: "Struktur & Komposisi", content: "Sebagai unsur paling sederhana, atom hidrogen netral terdiri dari satu proton tunggal di intinya dan satu elektron yang mengorbitnya..." },
             { title: "Fakta Menarik / Trivia", content: "Hidrogen memiliki tiga isotop umum: Protium (¹H), Deuterium (²H), dan Tritium (³H)..." }
         ]},
-        C: { name: "Karbon", symbol: "C", color: 0x606060, atomicNumber: 6, atomicMass: "12.011 u", electrons: [2, 4], radius: 1.1, details: [
+        C: { name: "Karbon", symbol: "C", color: 0x606060, atomicNumber: 6, atomicMass: "12.011 u", electrons: [2, 4], radius: 0.8, details: [
             { title: "Etimologi & Sejarah", content: "Nama 'karbon' berasal dari kata Latin 'carbo', yang berarti batu bara atau arang..." },
             { title: "Peran dalam Biologi", content: "Karbon adalah 'tulang punggung' kimia dari semua kehidupan di Bumi..." },
             { title: "Fakta Menarik / Trivia", content: "Isotop radioaktif Karbon-14 (¹⁴C) digunakan dalam penanggalan radiokarbon..." }
         ]},
-        O: { name: "Oksigen", symbol: "O", color: 0xff0000, atomicNumber: 8, atomicMass: "15.999 u", electrons: [2, 6], radius: 1.0, details: [
+        O: { name: "Oksigen", symbol: "O", color: 0xff0000, atomicNumber: 8, atomicMass: "15.999 u", electrons: [2, 6], radius: 0.8, details: [
             { title: "Etimologi & Sejarah", content: "Nama 'oksigen' diciptakan oleh Antoine Lavoisier dari kata Yunani 'oxys' (asam) dan 'genes' (pembentuk)..." },
             { title: "Peran dalam Biologi", content: "Oksigen sangat penting untuk respirasi seluler pada organisme aerobik..." },
             { title: "Fakta Menarik / Trivia", content: "Meskipun vital untuk kehidupan, oksigen murni pada tekanan tinggi bisa menjadi racun..." }
         ]},
-        N: { name: 'Nitrogen',  symbol: 'N',  color: 0x88aaff, atomicNumber: 7, atomicMass: "14.007 u", electrons: [2, 5], radius: 1.05, details: [ { title: "Info", content: "Detail untuk Nitrogen belum ditambahkan."} ]},
+        N: { name: 'Nitrogen',  symbol: 'N',  color: 0x88aaff, atomicNumber: 7, atomicMass: "14.007 u", electrons: [2, 5], radius: 0.85, details: [ { title: "Info", content: "Detail untuk Nitrogen belum ditambahkan."} ]},
         P: { name: 'Fosfor',    symbol: 'P',  color: 0xffa500, atomicNumber: 15, atomicMass: "30.974 u", electrons: [2, 8, 5], radius: 1.3, details: [ { title: "Info", content: "Detail untuk Fosfor belum ditambahkan."} ]},
         S: { name: 'Belerang',  symbol: 'S',  color: 0xffff88, atomicNumber: 16, atomicMass: "32.06 u", electrons: [2, 8, 6], radius: 1.2, details: [ { title: "Info", content: "Detail untuk Belerang belum ditambahkan."} ]},
         Cl: { name: 'Klorin',    symbol: 'Cl', color: 0x88ff88, atomicNumber: 17, atomicMass: "35.45 u", electrons: [2, 8, 7], radius: 1.15, details: [ { title: "Info", content: "Detail untuk Klorin belum ditambahkan."} ]},
+        F: { name: 'Fluor',     symbol: 'F',  color: 0x90ee90, atomicNumber: 9, atomicMass: "18.998 u", electrons: [2, 7], radius: 0.7, details: [ { title: "Info", content: "Detail untuk Fluor belum ditambahkan."} ] }
     },
     molecules: {
         H2O: { name: "Air (H₂O)", description: "Molekul polar dengan bentuk tekuk/bent (~104.5°). Memiliki muatan parsial negatif pada Oksigen dan positif pada Hidrogen.", details: [
@@ -43,6 +44,66 @@ const DATA = {
         CO2: { name: "Karbondioksida (CO₂)", description: "Molekul nonpolar dengan bentuk linear. Terdiri dari ikatan kovalen rangkap dua.", details: [
             { title: "Info Umum", content: "Karbondioksida adalah gas yang secara alami ada di atmosfer Bumi sebagai bagian dari siklus karbon Bumi." },
             { title: "Peran Biologis", content: "Tumbuhan menggunakan karbondioksida selama fotosintesis untuk membuat makanan." }
+        ]},
+        PH3: { name: "Fosfin (PH₃)", description: "Gas tidak berwarna dan mudah terbakar dengan struktur piramida trigonal.", details: [
+            { title: "Info Umum", content: "Detail belum ditambahkan.." },
+            { title: "Peran Biologis", content: "Detail belum ditambahkan." }
+        ]},
+        SF6: { name: "Belerang Heksafluorida (SF₆)", description: "Gas rumah kaca yang sangat poten dengan geometri oktahedral.", details: [
+            { title: "Info Umum", content: "Detail belum ditambahkan." },
+            { title: "Peran Biologis", content: "Detail belum ditambahkan." }
+        ]},
+        CCl4: { name: "Karbon Tetraklorida (CCl₄)", description: "Senyawa organik volatil dengan geometri tetrahedral.", details: [
+            { title: "Info Umum", content: "Detail belum ditambahkan." },
+            { title: "Peran Biologis", content: "Detail belum ditambahkan." }
+        ]},
+        C6H6: { name: "Benzena (C₆H₆)", description: "Senyawa organik aromatik dengan struktur cincin heksagonal.", details: [
+            { title: "Info Umum", content: "Detail belum ditambahkan." },
+            { title: "Peran Biologis", content: "Detail belum ditambahkan." }
+        ]},
+        C2H6: { name: "Etana (C₂H₆)", description: "Alkana sederhana yang terdiri dari dua atom karbon.", details: [
+            { title: "Info Umum", content: "Detail belum ditambahkan." },
+            { title: "Peran Biologis", content: "Detail belum ditambahkan." }
+        ]},
+        C3H8: { name: "Propana (C₃H₈)", description: "Alkana yang umum digunakan sebagai bahan bakar gas.", details: [
+            { title: "Info Umum", content: "Detail belum ditambahkan." },
+            { title: "Peran Biologis", content: "Detail belum ditambahkan." }
+        ]},
+        CH2O: { name: "Formaldehida (CH₂O)", description: "Aldehida paling sederhana dengan bentuk trigonal planar.", details: [
+            { title: "Info Umum", content: "Detail belum ditambahkan." },
+            { title: "Peran Biologis", content: "Detail belum ditambahkan." }
+        ]},
+        C3H6O: { name: "Aseton (C₃H₆O)", description: "Keton paling sederhana yang umum digunakan sebagai pelarut.", details: [
+            { title: "Info Umum", content: "Detail belum ditambahkan." },
+            { title: "Peran Biologis", content: "Detail belum ditambahkan." }
+        ]},
+        CH3COOH: { name: "Asam Asetat (CH₃COOH)", description: "Asam karboksilat sederhana, komponen utama cuka.", details: [
+            { title: "Info Umum", content: "Detail belum ditambahkan." },
+            { title: "Peran Biologis", content: "Detail belum ditambahkan." }
+        ]},
+        C8H10N4O2: { name: "Kafein (C₈H₁₀N₄O₂)", description: "Stimulan sistem saraf pusat dari kelas metilxantina.", details: [
+            { title: "Info Umum", content: "Detail belum ditambahkan." },
+            { title: "Peran Biologis", content: "Detail belum ditambahkan." }
+        ]},
+        NH3: { name: "Amonia (NH₃)", description: "Molekul polar dengan geometri piramida trigonal (~107.8°). Memiliki bau yang tajam dan khas.", details: [
+            { title: "Info Umum", content: "Amonia adalah senyawa nitrogen dan hidrogen yang penting secara komersial, terutama sebagai bahan dasar pupuk." },
+            { title: "Sifat Kimia", content: "Amonia bersifat basa lemah. Gasnya lebih ringan dari udara." }
+        ]},
+        HCl: { name: "Asam Klorida (HCl)", description: "Molekul diatomik yang sangat polar. Dalam larutan air, ia menjadi asam kuat.", details: [
+            { title: "Info Umum", content: "Asam klorida adalah gas tidak berwarna pada suhu kamar yang membentuk kabut putih asam klorida saat kontak dengan kelembapan atmosfer." },
+            { title: "Penggunaan", content: "Digunakan secara luas dalam industri kimia sebagai pereaksi, dan juga ditemukan di dalam lambung sebagai asam lambung." }
+        ]},
+        H2S: { name: "Hidrogen Sulfida (H₂S)", description: "Gas beracun dan mudah terbakar dengan bau khas seperti telur busuk. Bentuknya tekuk/bent (~92.1°).", details: [
+            { title: "Info Umum", content: "Hidrogen sulfida adalah gas yang dihasilkan dari dekomposisi bahan organik oleh bakteri tanpa adanya oksigen." },
+            { title: "Keamanan", content: "Meskipun baunya sangat kuat pada konsentrasi rendah, pada konsentrasi tinggi dapat melumpuhkan indra penciuman dengan cepat, menjadikannya sangat berbahaya." }
+        ]},
+        C2H4: { name: "Etena (C₂H₄)", description: "Alkena paling sederhana, dengan ikatan rangkap dua antar karbon yang membuatnya planar.", details: [
+            { title: "Info Umum", content: "Etena (juga dikenal sebagai etilena) adalah hormon tumbuhan alami dan bahan baku industri kimia yang sangat penting." },
+            { title: "Penggunaan", content: "Digunakan untuk memproduksi polietilena, plastik yang paling banyak digunakan di dunia." }
+        ]},
+        C2H2: { name: "Etuna (C₂H₂)", description: "Alkuna paling sederhana, dengan ikatan rangkap tiga antar karbon yang membuatnya linear.", details: [
+            { title: "Info Umum", content: "Etuna (juga dikenal sebagai asetilena) adalah gas yang sangat mudah terbakar." },
+            { title: "Penggunaan", content: "Digunakan dalam pengelasan (las karbit) karena menghasilkan nyala api yang sangat panas." }
         ]},
     },
 };
@@ -449,12 +510,12 @@ function buildAtomDetailMenu() {
         
         const pauseBtn = document.createElement('button');
         pauseBtn.className = 'btn';
-        pauseBtn.textContent = 'Pause Animasi';
+        pauseBtn.textContent = 'Pause';
         pauseBtn.onclick = () => { isAnimationPaused = true; };
         
         const startBtn = document.createElement('button');
         startBtn.className = 'btn';
-        startBtn.textContent = 'Mulai Animasi';
+        startBtn.textContent = 'Mulai';
         startBtn.onclick = () => { isAnimationPaused = false; clock.getDelta(); };
         
         btnGroup.appendChild(pauseBtn);
@@ -663,9 +724,24 @@ function createBondMesh(pos1, pos2, radius = 0.1) {
 // Router untuk memanggil fungsi gambar molekul yang sesuai.
 function drawMoleculeGeometry(moleculeKey){
     switch (moleculeKey) {
-      case "H2O": drawWater(); break;
-      case "CH4": drawMethane(); break;
-      case "CO2": drawCarbonDioxide(); break;
+        case "H2O": drawWater(); break;
+        case "CH4": drawMethane(); break;
+        case "CO2": drawCarbonDioxide(); break;
+        case "PH3": drawPhosphine(); break;
+        case "SF6": drawSulfurHexafluoride(); break;
+        case "CCl4": drawCarbonTetrachloride(); break;
+        case "C6H6": drawBenzene(); break;
+        case "C2H6": drawEthane(); break;
+        case "C3H8": drawPropane(); break;
+        case "CH2O": drawFormaldehyde(); break;
+        case "C3H6O": drawAcetone(); break;
+        case "CH3COOH": drawAceticAcid(); break;
+        case "C8H10N4O2": drawCaffeine(); break;
+        case "NH3": drawAmmonia(); break;
+        case "HCl": drawHydrogenChloride(); break;
+        case "H2S": drawHydrogenSulfide(); break;
+        case "C2H4": drawEthene(); break;
+        case "C2H2": drawEthyne(); break;
     }
 }
 
@@ -720,6 +796,624 @@ function drawCarbonDioxide() {
     mainGroup.add(createBondMesh(c.position.clone().setY(-doubleBondOffset), o1.position.clone().setY(-doubleBondOffset), 0.08));
     mainGroup.add(createBondMesh(c.position.clone().setY(doubleBondOffset), o2.position.clone().setY(doubleBondOffset), 0.08));
     mainGroup.add(createBondMesh(c.position.clone().setY(-doubleBondOffset), o2.position.clone().setY(-doubleBondOffset), 0.08));
+}
+
+function drawPhosphine() {
+            const p = createAtomMesh(DATA.atoms.P.radius, DATA.atoms.P.color, 'P');
+            p.userData.initialPosition = p.position.clone();
+            mainGroup.add(p);
+            
+            const bondLength = 2.5;
+            const angle = 93.5 * Math.PI / 180;
+            const h1 = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+            h1.position.set(0, bondLength, 0); // Atas
+            
+            const h2 = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+            h2.position.set(bondLength * Math.sin(angle), -bondLength * Math.cos(angle), 0); // Kanan bawah
+            
+            const h3 = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+            h3.position.set(-bondLength * Math.sin(angle/2), -bondLength * Math.cos(angle), -bondLength * Math.sin(angle) * 0.866); // Kiri bawah belakang
+
+            h1.userData.initialPosition = h1.position.clone();
+            h2.userData.initialPosition = h2.position.clone();
+            h3.userData.initialPosition = h3.position.clone();
+
+            mainGroup.add(h1, createBondMesh(p.position, h1.position, 0.1));
+            mainGroup.add(h2, createBondMesh(p.position, h2.position, 0.1));
+            mainGroup.add(h3, createBondMesh(p.position, h3.position, 0.1));
+        }
+
+function drawSulfurHexafluoride() {
+    const s = createAtomMesh(DATA.atoms.S.radius, DATA.atoms.S.color, 'S');
+    s.userData.initialPosition = s.position.clone();
+    mainGroup.add(s);
+    const bondLength = 2.8;
+    const positions = [
+        new THREE.Vector3(bondLength, 0, 0), new THREE.Vector3(-bondLength, 0, 0),
+        new THREE.Vector3(0, bondLength, 0), new THREE.Vector3(0, -bondLength, 0),
+        new THREE.Vector3(0, 0, bondLength), new THREE.Vector3(0, 0, -bondLength),
+    ];
+    positions.forEach(pos => {
+        const f = createAtomMesh(DATA.atoms.F.radius, DATA.atoms.F.color, 'F');
+        f.position.copy(pos);
+        f.userData.initialPosition = f.position.clone();
+        mainGroup.add(f, createBondMesh(s.position, f.position, 0.1));
+    });
+}
+            
+function drawCarbonTetrachloride() {
+    const c = createAtomMesh(DATA.atoms.C.radius, DATA.atoms.C.color, 'C', '+', 0x8888ff);
+    c.userData.initialPosition = c.position.clone();
+    mainGroup.add(c);
+    const bondLength = 3.0;
+    const positions = [
+        new THREE.Vector3(1, 1, 1), new THREE.Vector3(1, -1, -1),
+        new THREE.Vector3(-1, 1, -1), new THREE.Vector3(-1, -1, 1)
+    ];
+    positions.forEach(pos => {
+        const cl = createAtomMesh(DATA.atoms.Cl.radius, DATA.atoms.Cl.color, 'Cl', '-', 0xff8888);
+        cl.position.copy(pos.normalize().multiplyScalar(bondLength));
+        cl.userData.initialPosition = cl.position.clone();
+    mainGroup.add(cl, createBondMesh(c.position, cl.position, 0.15));
+    });
+}
+
+ function drawBenzene() {
+            const carbons = [];
+            const ringRadius = 3.0;
+            const chBondLength = 2.0;
+            const doubleBondOffset = 0.15;
+
+            // Buat dan posisikan 6 atom Karbon dan 6 atom Hidrogen
+            for (let i = 0; i < 6; i++) {
+                const angle = (i / 6) * 2 * Math.PI;
+
+                // Posisi Karbon
+                const cX = ringRadius * Math.cos(angle);
+                const cY = ringRadius * Math.sin(angle);
+                const carbon = createAtomMesh(DATA.atoms.C.radius, DATA.atoms.C.color, 'C');
+                carbon.position.set(cX, cY, 0);
+                carbon.userData.initialPosition = carbon.position.clone();
+                carbons.push(carbon);
+                mainGroup.add(carbon);
+
+                // Posisi Hidrogen
+                const hX = (ringRadius + chBondLength) * Math.cos(angle);
+                const hY = (ringRadius + chBondLength) * Math.sin(angle);
+                const hydrogen = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+                hydrogen.position.set(hX, hY, 0);
+                hydrogen.userData.initialPosition = hydrogen.position.clone();
+                mainGroup.add(hydrogen);
+                
+                // Buat ikatan C-H
+                mainGroup.add(createBondMesh(carbon.position, hydrogen.position, 0.08));
+            }
+
+            // Buat ikatan C-C (berselang-seling)
+            for (let i = 0; i < 6; i++) {
+                const currentCarbon = carbons[i];
+                const nextCarbon = carbons[(i + 1) % 6]; // Untuk menyambung C terakhir ke C pertama
+
+                if (i % 2 === 0) { // Ikatan rangkap dua
+                    const pos1 = currentCarbon.position;
+                    const pos2 = nextCarbon.position;
+                    mainGroup.add(createBondMesh(pos1.clone().setZ(doubleBondOffset), pos2.clone().setZ(doubleBondOffset), 0.08));
+                    mainGroup.add(createBondMesh(pos1.clone().setZ(-doubleBondOffset), pos2.clone().setZ(-doubleBondOffset), 0.08));
+                } else { // Ikatan tunggal
+                    mainGroup.add(createBondMesh(currentCarbon.position, nextCarbon.position, 0.08));
+                }
+            }
+        }
+
+function drawEthane() {
+            const ccBondLength = 2.5;
+            const chBondLength = 2.0;
+            const tetrahedralAngle = 109.5 * Math.PI / 180;
+
+            // Buat 2 atom Karbon
+            const c1 = createAtomMesh(DATA.atoms.C.radius, DATA.atoms.C.color, 'C');
+            c1.position.x = -ccBondLength / 2;
+            c1.userData.initialPosition = c1.position.clone();
+            mainGroup.add(c1);
+
+            const c2 = createAtomMesh(DATA.atoms.C.radius, DATA.atoms.C.color, 'C');
+            c2.position.x = ccBondLength / 2;
+            c2.userData.initialPosition = c2.position.clone();
+            mainGroup.add(c2);
+
+            // Buat ikatan C-C
+            mainGroup.add(createBondMesh(c1.position, c2.position, 0.12));
+
+            // Buat atom Hidrogen untuk setiap Karbon
+            const basePositions = [];
+            for (let i = 0; i < 3; i++) {
+                const angle = (i / 3) * 2 * Math.PI;
+                basePositions.push(new THREE.Vector3(
+                    chBondLength * Math.cos(tetrahedralAngle - Math.PI/2),
+                    chBondLength * Math.sin(tetrahedralAngle- Math.PI/2) * Math.cos(angle),
+                    chBondLength * Math.sin(tetrahedralAngle- Math.PI/2) * Math.sin(angle)
+                ));
+            }
+            
+            // Hidrogen di Karbon 1 (menghadap ke kiri)
+            basePositions.forEach(pos => {
+                const h = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+                h.position.copy(c1.position).add(pos.clone().setX(-pos.x));
+                h.userData.initialPosition = h.position.clone();
+                mainGroup.add(h, createBondMesh(c1.position, h.position, 0.08));
+            });
+
+            // Hidrogen di Karbon 2 (menghadap ke kanan, staggered)
+            const rotationMatrix = new THREE.Matrix4().makeRotationX(Math.PI / 3);
+             basePositions.forEach(pos => {
+                const h = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+                const rotatedPos = pos.clone().applyMatrix4(rotationMatrix);
+                h.position.copy(c2.position).add(rotatedPos);
+                h.userData.initialPosition = h.position.clone();
+                mainGroup.add(h, createBondMesh(c2.position, h.position, 0.08));
+            });
+        }
+
+function drawPropane() {
+            const ccBondLength = 2.5;
+            const chBondLength = 2.0;
+            const tetrahedralAngle = 109.5 * Math.PI / 180;
+
+            // Buat 3 atom Karbon dalam satu garis
+            const c1 = createAtomMesh(DATA.atoms.C.radius, DATA.atoms.C.color, 'C');
+            c1.position.x = -ccBondLength;
+            c1.userData.initialPosition = c1.position.clone();
+            mainGroup.add(c1);
+
+            const c2 = createAtomMesh(DATA.atoms.C.radius, DATA.atoms.C.color, 'C');
+            c2.position.x = 0;
+            c2.userData.initialPosition = c2.position.clone();
+            mainGroup.add(c2);
+
+            const c3 = createAtomMesh(DATA.atoms.C.radius, DATA.atoms.C.color, 'C');
+            c3.position.x = ccBondLength;
+            c3.userData.initialPosition = c3.position.clone();
+            mainGroup.add(c3);
+
+            // Buat ikatan C-C
+            mainGroup.add(createBondMesh(c1.position, c2.position, 0.12));
+            mainGroup.add(createBondMesh(c2.position, c3.position, 0.12));
+
+            // -- Hidrogen untuk Karbon 1 (ujung kiri) --
+            const endCHPositions = [];
+            for (let i = 0; i < 3; i++) {
+                const angle = (i / 3) * 2 * Math.PI;
+                endCHPositions.push(new THREE.Vector3(
+                    chBondLength * Math.cos(tetrahedralAngle - Math.PI/2),
+                    chBondLength * Math.sin(tetrahedralAngle - Math.PI/2) * Math.cos(angle),
+                    chBondLength * Math.sin(tetrahedralAngle - Math.PI/2) * Math.sin(angle)
+                ));
+            }
+            
+            endCHPositions.forEach(pos => {
+                const h = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+                h.position.copy(c1.position).add(pos.clone().setX(-pos.x));
+                h.userData.initialPosition = h.position.clone();
+                mainGroup.add(h, createBondMesh(c1.position, h.position, 0.08));
+            });
+
+            // -- Hidrogen untuk Karbon 2 (tengah) --
+            const h_mid1 = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+            h_mid1.position.set(0, chBondLength, 0);
+            h_mid1.userData.initialPosition = h_mid1.position.clone();
+            mainGroup.add(h_mid1, createBondMesh(c2.position, h_mid1.position, 0.08));
+
+            const h_mid2 = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+            h_mid2.position.set(0, -chBondLength * Math.cos(60 * Math.PI/180), -chBondLength * Math.sin(60*Math.PI/180));
+            h_mid2.userData.initialPosition = h_mid2.position.clone();
+            mainGroup.add(h_mid2, createBondMesh(c2.position, h_mid2.position, 0.08));
+
+            // -- Hidrogen untuk Karbon 3 (ujung kanan) --
+            const rotationMatrix = new THREE.Matrix4().makeRotationX(Math.PI / 3);
+            endCHPositions.forEach(pos => {
+                const h = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+                const rotatedPos = pos.clone().applyMatrix4(rotationMatrix);
+                h.position.copy(c3.position).add(rotatedPos);
+                h.userData.initialPosition = h.position.clone();
+                mainGroup.add(h, createBondMesh(c3.position, h.position, 0.08));
+            });
+        }
+
+function drawFormaldehyde() {
+            const c = createAtomMesh(DATA.atoms.C.radius, DATA.atoms.C.color, 'C');
+            c.userData.initialPosition = c.position.clone();
+            mainGroup.add(c);
+
+            const o = createAtomMesh(DATA.atoms.O.radius, DATA.atoms.O.color, 'O');
+            const coBondLength = 2.2;
+            o.position.y = coBondLength;
+            o.userData.initialPosition = o.position.clone();
+            mainGroup.add(o);
+            
+            // Ikatan rangkap C=O
+            const doubleBondOffset = 0.15;
+            mainGroup.add(createBondMesh(c.position.clone().setX(doubleBondOffset), o.position.clone().setX(doubleBondOffset), 0.08));
+            mainGroup.add(createBondMesh(c.position.clone().setX(-doubleBondOffset), o.position.clone().setX(-doubleBondOffset), 0.08));
+
+            const h1 = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+            const chBondLength = 2.0;
+            const angle = 120 * Math.PI / 180;
+            h1.position.set(chBondLength * Math.cos(angle/2), -chBondLength * Math.sin(angle/2), 0);
+            h1.userData.initialPosition = h1.position.clone();
+            mainGroup.add(h1, createBondMesh(c.position, h1.position, 0.08));
+            
+            const h2 = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+            h2.position.set(-chBondLength * Math.cos(angle/2), -chBondLength * Math.sin(angle/2), 0);
+            h2.userData.initialPosition = h2.position.clone();
+            mainGroup.add(h2, createBondMesh(c.position, h2.position, 0.08));
+        }
+
+function drawAcetone() {
+            const ccBondLength = 2.5;
+            const coBondLength = 2.2;
+            const chBondLength = 2.0;
+            const trigonalAngle = 120 * Math.PI / 180;
+            const tetrahedralAngle = 109.5 * Math.PI / 180;
+
+            // Karbon tengah (gugus karbonil)
+            const c_mid = createAtomMesh(DATA.atoms.C.radius, DATA.atoms.C.color, 'C');
+            c_mid.userData.initialPosition = c_mid.position.clone();
+            mainGroup.add(c_mid);
+
+            // Oksigen
+            const o = createAtomMesh(DATA.atoms.O.radius, DATA.atoms.O.color, 'O');
+            o.position.y = coBondLength;
+            o.userData.initialPosition = o.position.clone();
+            mainGroup.add(o);
+
+            // Ikatan rangkap C=O
+            const doubleBondOffset = 0.15;
+            mainGroup.add(createBondMesh(c_mid.position.clone().setX(doubleBondOffset), o.position.clone().setX(doubleBondOffset), 0.08));
+            mainGroup.add(createBondMesh(c_mid.position.clone().setX(-doubleBondOffset), o.position.clone().setX(-doubleBondOffset), 0.08));
+            
+            // Karbon metil kiri
+            const c_left = createAtomMesh(DATA.atoms.C.radius, DATA.atoms.C.color, 'C');
+            c_left.position.set(-ccBondLength * Math.sin(trigonalAngle / 2), -ccBondLength * Math.cos(trigonalAngle / 2), 0);
+            c_left.userData.initialPosition = c_left.position.clone();
+            mainGroup.add(c_left, createBondMesh(c_mid.position, c_left.position, 0.12));
+
+            // Karbon metil kanan
+            const c_right = createAtomMesh(DATA.atoms.C.radius, DATA.atoms.C.color, 'C');
+            c_right.position.set(ccBondLength * Math.sin(trigonalAngle / 2), -ccBondLength * Math.cos(trigonalAngle / 2), 0);
+            c_right.userData.initialPosition = c_right.position.clone();
+            mainGroup.add(c_right, createBondMesh(c_mid.position, c_right.position, 0.12));
+            
+            // Posisi dasar Hidrogen untuk gugus metil (mengarah ke -X)
+            const methylHPositions = [];
+            for (let i = 0; i < 3; i++) {
+                const angle = (i / 3) * 2 * Math.PI;
+                methylHPositions.push(new THREE.Vector3(
+                    -chBondLength * Math.cos(tetrahedralAngle - Math.PI / 2),
+                    chBondLength * Math.sin(tetrahedralAngle - Math.PI / 2) * Math.cos(angle),
+                    chBondLength * Math.sin(tetrahedralAngle - Math.PI / 2) * Math.sin(angle)
+                ));
+            }
+            
+            // Hidrogen di karbon kiri
+            const bondVectorLeft = new THREE.Vector3().subVectors(c_left.position, c_mid.position).normalize();
+            const quaternionLeft = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(-1, 0, 0), bondVectorLeft);
+            methylHPositions.forEach(pos => {
+                const h = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+                h.position.copy(c_left.position).add(pos.clone().applyQuaternion(quaternionLeft));
+                h.userData.initialPosition = h.position.clone();
+                mainGroup.add(h, createBondMesh(c_left.position, h.position, 0.08));
+            });
+
+            // Hidrogen di karbon kanan
+            const bondVectorRight = new THREE.Vector3().subVectors(c_right.position, c_mid.position).normalize();
+            const quaternionRight = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(-1, 0, 0), bondVectorRight);
+            methylHPositions.forEach(pos => {
+                const h = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+                h.position.copy(c_right.position).add(pos.clone().applyQuaternion(quaternionRight));
+                h.userData.initialPosition = h.position.clone();
+                mainGroup.add(h, createBondMesh(c_right.position, h.position, 0.08));
+            });
+        }
+
+function drawAceticAcid() {
+            const ccBondLength = 2.8;
+            const coBondLength = 2.2;
+            const chBondLength = 2.0;
+            const ohBondLength = 1.8;
+            const trigonalAngle = 120 * Math.PI / 180;
+            const tetrahedralAngle = 109.5 * Math.PI / 180;
+
+            // Karbon gugus karboksil
+            const c_carboxyl = createAtomMesh(DATA.atoms.C.radius, DATA.atoms.C.color, 'C');
+            c_carboxyl.userData.initialPosition = c_carboxyl.position.clone();
+            mainGroup.add(c_carboxyl);
+
+            // Oksigen karbonil (ikatan rangkap)
+            const o_carbonyl = createAtomMesh(DATA.atoms.O.radius, DATA.atoms.O.color, 'O');
+            o_carbonyl.position.set(coBondLength * Math.sin(trigonalAngle/2), coBondLength * Math.cos(trigonalAngle/2), 0);
+            o_carbonyl.userData.initialPosition = o_carbonyl.position.clone();
+            mainGroup.add(o_carbonyl);
+            const doubleBondOffset = 0.15;
+            mainGroup.add(createBondMesh(c_carboxyl.position.clone().setZ(doubleBondOffset), o_carbonyl.position.clone().setZ(doubleBondOffset), 0.08));
+            mainGroup.add(createBondMesh(c_carboxyl.position.clone().setZ(-doubleBondOffset), o_carbonyl.position.clone().setZ(-doubleBondOffset), 0.08));
+            
+            // Oksigen hidroksil (ikatan tunggal)
+            const o_hydroxyl = createAtomMesh(DATA.atoms.O.radius, DATA.atoms.O.color, 'O');
+            o_hydroxyl.position.set(-coBondLength * Math.sin(trigonalAngle/2), coBondLength * Math.cos(trigonalAngle/2), 0);
+            o_hydroxyl.userData.initialPosition = o_hydroxyl.position.clone();
+            mainGroup.add(o_hydroxyl, createBondMesh(c_carboxyl.position, o_hydroxyl.position, 0.08));
+            
+            // Hidrogen hidroksil
+            const h_hydroxyl = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+            const cohAngle = 109.5 * Math.PI / 180;
+            h_hydroxyl.position.x = o_hydroxyl.position.x - ohBondLength * Math.cos(cohAngle/2);
+            h_hydroxyl.position.y = o_hydroxyl.position.y + ohBondLength * Math.sin(cohAngle/2);
+            h_hydroxyl.userData.initialPosition = h_hydroxyl.position.clone();
+            mainGroup.add(h_hydroxyl, createBondMesh(o_hydroxyl.position, h_hydroxyl.position, 0.08));
+
+            // Karbon metil
+            const c_methyl = createAtomMesh(DATA.atoms.C.radius, DATA.atoms.C.color, 'C');
+            c_methyl.position.set(0, -ccBondLength, 0);
+            c_methyl.userData.initialPosition = c_methyl.position.clone();
+            mainGroup.add(c_methyl, createBondMesh(c_carboxyl.position, c_methyl.position, 0.12));
+
+            // Hidrogen untuk gugus metil
+            const methylHPositions = [];
+            for (let i = 0; i < 3; i++) {
+                const angle = (i / 3) * 2 * Math.PI;
+                 methylHPositions.push(new THREE.Vector3(
+                    chBondLength * Math.sin(tetrahedralAngle - Math.PI / 2) * Math.cos(angle),
+                    -chBondLength * Math.cos(tetrahedralAngle - Math.PI / 2),
+                    chBondLength * Math.sin(tetrahedralAngle - Math.PI / 2) * Math.sin(angle)
+                ));
+            }
+             methylHPositions.forEach(pos => {
+                const h = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+                h.position.copy(c_methyl.position).add(pos);
+                h.userData.initialPosition = h.position.clone();
+                mainGroup.add(h, createBondMesh(c_methyl.position, h.position, 0.08));
+            });
+        }
+
+function drawCaffeine() {
+            const atoms = {}; // Store atom objects for easy reference
+            const bondLength = 2.5;
+            const chBondLength = 2.0;
+            const doubleBondOffset = 0.15;
+
+            // Helper to add atom and save it
+            function createAndPlaceAtom(name, symbol, position) {
+                const atom = createAtomMesh(DATA.atoms[symbol].radius, DATA.atoms[symbol].color, symbol);
+                atom.position.copy(position);
+                atom.userData.initialPosition = atom.position.clone();
+                atoms[name] = atom;
+                mainGroup.add(atom);
+                return atom;
+            }
+            
+            // Helper for double bonds
+            function addDoubleBond(pos1, pos2, radius = 0.08) {
+                mainGroup.add(createBondMesh(pos1.clone().setZ(doubleBondOffset), pos2.clone().setZ(doubleBondOffset), radius));
+                mainGroup.add(createBondMesh(pos1.clone().setZ(-doubleBondOffset), pos2.clone().setZ(-doubleBondOffset), radius));
+            }
+
+            // --- Define more accurate atom positions for the fused rings ---
+            const p = { // positions
+                C5: new THREE.Vector3(0, 0, 0),
+                C4: new THREE.Vector3(bondLength, 0, 0),
+                N3: new THREE.Vector3(bondLength + bondLength * Math.cos(Math.PI / 3), -bondLength * Math.sin(Math.PI / 3), 0),
+                C2: new THREE.Vector3(bondLength, -2 * bondLength * Math.sin(Math.PI / 3), 0),
+                N1: new THREE.Vector3(0, -2 * bondLength * Math.sin(Math.PI / 3), 0),
+                C6: new THREE.Vector3(-bondLength * Math.cos(Math.PI / 3), -bondLength * Math.sin(Math.PI / 3), 0),
+                N7: new THREE.Vector3(-0.4, 1.9, 0),
+                C8: new THREE.Vector3(1.25, 2.7, 0),
+                N9: new THREE.Vector3(2.9, 1.9, 0),
+            };
+
+            // --- Create ring atoms ---
+            Object.keys(p).forEach(key => {
+                const symbol = key.charAt(0);
+                createAndPlaceAtom(key, symbol, p[key]);
+            });
+
+            // --- Create ring bonds ---
+            mainGroup.add(createBondMesh(p.N1, p.C2, 0.12));
+            mainGroup.add(createBondMesh(p.C2, p.N3, 0.12));
+            mainGroup.add(createBondMesh(p.N3, p.C4, 0.12));
+            mainGroup.add(createBondMesh(p.C5, p.C6, 0.12));
+            mainGroup.add(createBondMesh(p.C6, p.N1, 0.12));
+            mainGroup.add(createBondMesh(p.C5, p.N7, 0.12));
+            mainGroup.add(createBondMesh(p.C8, p.N9, 0.12));
+            mainGroup.add(createBondMesh(p.N9, p.C4, 0.12));
+
+            // --- Add the double bonds based on reference image ---
+            addDoubleBond(p.C4, p.C5);
+            addDoubleBond(p.N7, p.C8);
+
+            // --- Add external atoms ---
+            // Carbonyl Oxygens
+            const O2_pos = new THREE.Vector3().subVectors(p.C2, p.N1).add(new THREE.Vector3().subVectors(p.C2, p.N3)).normalize().multiplyScalar(bondLength).add(p.C2);
+            const O2 = createAndPlaceAtom('O2', 'O', O2_pos);
+            addDoubleBond(p.C2, O2.position);
+            
+            const O6_pos = new THREE.Vector3().subVectors(p.C6, p.N1).add(new THREE.Vector3().subVectors(p.C6, p.C5)).normalize().multiplyScalar(bondLength).add(p.C6);
+            const O6 = createAndPlaceAtom('O6', 'O', O6_pos);
+            addDoubleBond(p.C6, O6.position);
+
+            // Hydrogen on C8
+            const H8_pos = new THREE.Vector3().subVectors(p.C8, p.N7).add(new THREE.Vector3().subVectors(p.C8, p.N9)).normalize().multiplyScalar(chBondLength).add(p.C8);
+            const H8 = createAndPlaceAtom('H8', 'H', H8_pos);
+            mainGroup.add(createBondMesh(p.C8, H8.position, 0.08));
+
+            // --- Methyl Groups ---
+            function addMethylGroup(parentAtom, refAtom1, refAtom2) {
+                const offset = new THREE.Vector3().subVectors(parentAtom.position, refAtom1.position).add(new THREE.Vector3().subVectors(parentAtom.position, refAtom2.position)).normalize().multiplyScalar(bondLength);
+                const methyl_C_pos = new THREE.Vector3().addVectors(parentAtom.position, offset);
+                const methyl_C = createAndPlaceAtom(`C_methyl_${parentAtom.name}`, 'C', methyl_C_pos);
+                mainGroup.add(createBondMesh(parentAtom.position, methyl_C.position, 0.12));
+
+                const tetrahedralAngle = 109.5 * Math.PI / 180;
+                const hPositions = [];
+                 for (let i = 0; i < 3; i++) {
+                    const angle = (i / 3) * 2 * Math.PI;
+                     hPositions.push(new THREE.Vector3(
+                        chBondLength * Math.sin(tetrahedralAngle - Math.PI / 2) * Math.cos(angle),
+                        chBondLength * Math.cos(tetrahedralAngle - Math.PI / 2),
+                        chBondLength * Math.sin(tetrahedralAngle - Math.PI / 2) * Math.sin(angle)
+                    ));
+                }
+
+                const bondVector = new THREE.Vector3().subVectors(methyl_C.position, parentAtom.position).normalize();
+                const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), bondVector);
+
+                hPositions.forEach((pos, i) => {
+                    const h = createAndPlaceAtom(`H_methyl_${parentAtom.name}_${i}`, 'H', methyl_C.position.clone().add(pos.clone().applyQuaternion(quaternion)));
+                    mainGroup.add(createBondMesh(methyl_C.position, h.position, 0.08));
+                });
+            }
+            
+            addMethylGroup(atoms.N1, atoms.C2, atoms.C6);
+            addMethylGroup(atoms.N3, atoms.C2, atoms.C4);
+            addMethylGroup(atoms.N7, atoms.C5, atoms.C8);
+        }
+
+function drawAmmonia() {
+    const n = createAtomMesh(DATA.atoms.N.radius, DATA.atoms.N.color, 'N', '-', 0xff8888);
+    n.position.y = 0.3; // Angkat atom N sedikit untuk membentuk puncak piramida
+    n.userData.initialPosition = n.position.clone();
+    mainGroup.add(n);
+    
+    const bondLength = 2.2;
+    const angleHNH = 107.8 * Math.PI / 180;
+    
+    // Hitung posisi atom H di dasar piramida
+    const h1 = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H', '+', 0x8888ff);
+    h1.position.set(0, -bondLength * Math.cos(angleHNH/1.5), bondLength * Math.sin(angleHNH/1.5));
+
+    const h2 = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H', '+', 0x8888ff);
+    h2.position.set(bondLength * Math.sin(angleHNH/1.5) * Math.sin(Math.PI / 3 * 2), -bondLength * Math.cos(angleHNH/1.5), -bondLength * Math.sin(angleHNH/1.5) * Math.cos(Math.PI / 3 * 2));
+
+    const h3 = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H', '+', 0x8888ff);
+    h3.position.set(-bondLength * Math.sin(angleHNH/1.5) * Math.sin(Math.PI / 3 * 2), -bondLength * Math.cos(angleHNH/1.5), -bondLength * Math.sin(angleHNH/1.5) * Math.cos(Math.PI / 3 * 2));
+    
+    h1.userData.initialPosition = h1.position.clone();
+    h2.userData.initialPosition = h2.position.clone();
+    h3.userData.initialPosition = h3.position.clone();
+
+    mainGroup.add(h1, h2, h3);
+    mainGroup.add(createBondMesh(n.position, h1.position, 0.08));
+    mainGroup.add(createBondMesh(n.position, h2.position, 0.08));
+    mainGroup.add(createBondMesh(n.position, h3.position, 0.08));
+}
+
+function drawHydrogenChloride() {
+    const h = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H', '+', 0x8888ff);
+    const cl = createAtomMesh(DATA.atoms.Cl.radius, DATA.atoms.Cl.color, 'Cl', '-', 0xff8888);
+    const bondLength = 2.8;
+    
+    h.position.x = -bondLength / 2;
+    cl.position.x = bondLength / 2;
+    
+    h.userData.initialPosition = h.position.clone();
+    cl.userData.initialPosition = cl.position.clone();
+    
+    mainGroup.add(h, cl);
+    mainGroup.add(createBondMesh(h.position, cl.position, 0.12));
+}
+
+function drawHydrogenSulfide() {
+    const s = createAtomMesh(DATA.atoms.S.radius, DATA.atoms.S.color, 'S', '-', 0xff8888);
+    const h1 = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H', '+', 0x8888ff);
+    const h2 = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H', '+', 0x8888ff);
+    const angle = (92.1 * Math.PI) / 180; // Sudut ikatan H-S-H
+    const bondLength = 2.4;
+    
+    h1.position.set(bondLength * Math.cos(angle / 2), bondLength * Math.sin(angle / 2), 0);
+    h2.position.set(bondLength * Math.cos(angle / 2), -bondLength * Math.sin(angle / 2), 0);
+    
+    s.userData.initialPosition = s.position.clone();
+    h1.userData.initialPosition = h1.position.clone();
+    h2.userData.initialPosition = h2.position.clone();
+    
+    mainGroup.add(s, h1, h2);
+    mainGroup.add(createBondMesh(s.position, h1.position, 0.08));
+    mainGroup.add(createBondMesh(s.position, h2.position, 0.08));
+}
+
+function drawEthene() {
+    const doubleBondOffset = 0.15;
+    const ccBondLength = 2.4;
+    const chBondLength = 2.0;
+    const hchAngle = 117 * Math.PI / 180;
+
+    const c1 = createAtomMesh(DATA.atoms.C.radius, DATA.atoms.C.color, 'C');
+    c1.position.x = -ccBondLength / 2;
+    c1.userData.initialPosition = c1.position.clone();
+    mainGroup.add(c1);
+
+    const c2 = createAtomMesh(DATA.atoms.C.radius, DATA.atoms.C.color, 'C');
+    c2.position.x = ccBondLength / 2;
+    c2.userData.initialPosition = c2.position.clone();
+    mainGroup.add(c2);
+
+    // Ikatan rangkap C=C
+    mainGroup.add(createBondMesh(c1.position.clone().setY(doubleBondOffset), c2.position.clone().setY(doubleBondOffset), 0.08));
+    mainGroup.add(createBondMesh(c1.position.clone().setY(-doubleBondOffset), c2.position.clone().setY(-doubleBondOffset), 0.08));
+
+    // Hidrogen pada C1
+    const h1 = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+    h1.position.set(c1.position.x - chBondLength * Math.cos(hchAngle/2), chBondLength * Math.sin(hchAngle/2), 0);
+    h1.userData.initialPosition = h1.position.clone();
+    mainGroup.add(h1, createBondMesh(c1.position, h1.position, 0.08));
+
+    const h2 = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+    h2.position.set(c1.position.x - chBondLength * Math.cos(hchAngle/2), -chBondLength * Math.sin(hchAngle/2), 0);
+    h2.userData.initialPosition = h2.position.clone();
+    mainGroup.add(h2, createBondMesh(c1.position, h2.position, 0.08));
+
+    // Hidrogen pada C2
+    const h3 = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+    h3.position.set(c2.position.x + chBondLength * Math.cos(hchAngle/2), chBondLength * Math.sin(hchAngle/2), 0);
+    h3.userData.initialPosition = h3.position.clone();
+    mainGroup.add(h3, createBondMesh(c2.position, h3.position, 0.08));
+
+    const h4 = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+    h4.position.set(c2.position.x + chBondLength * Math.cos(hchAngle/2), -chBondLength * Math.sin(hchAngle/2), 0);
+    h4.userData.initialPosition = h4.position.clone();
+    mainGroup.add(h4, createBondMesh(c2.position, h4.position, 0.08));
+}
+
+// Menggambar geometri spesifik untuk Etuna (C2H2).
+function drawEthyne() {
+    const tripleBondOffset = 0.20;
+    const ccBondLength = 2.2;
+    const chBondLength = 1.9;
+
+    const c1 = createAtomMesh(DATA.atoms.C.radius, DATA.atoms.C.color, 'C');
+    c1.position.x = -ccBondLength / 2;
+    c1.userData.initialPosition = c1.position.clone();
+    mainGroup.add(c1);
+
+    const c2 = createAtomMesh(DATA.atoms.C.radius, DATA.atoms.C.color, 'C');
+    c2.position.x = ccBondLength / 2;
+    c2.userData.initialPosition = c2.position.clone();
+    mainGroup.add(c2);
+
+    // Ikatan rangkap tiga C≡C
+    mainGroup.add(createBondMesh(c1.position, c2.position, 0.08)); // center
+    mainGroup.add(createBondMesh(c1.position.clone().setY(tripleBondOffset), c2.position.clone().setY(tripleBondOffset), 0.08));
+    mainGroup.add(createBondMesh(c1.position.clone().setY(-tripleBondOffset), c2.position.clone().setY(-tripleBondOffset), 0.08));
+
+    // Hidrogen
+    const h1 = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+    h1.position.x = c1.position.x - chBondLength;
+    h1.userData.initialPosition = h1.position.clone();
+    mainGroup.add(h1, createBondMesh(c1.position, h1.position, 0.08));
+
+    const h2 = createAtomMesh(DATA.atoms.H.radius, DATA.atoms.H.color, 'H');
+    h2.position.x = c2.position.x + chBondLength;
+    h2.userData.initialPosition = h2.position.clone();
+    mainGroup.add(h2, createBondMesh(c2.position, h2.position, 0.08));
 }
 
 // Mendeteksi atom mana yang sedang ditunjuk oleh kursor mouse.
