@@ -4,6 +4,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { enterClassroom } from "./core/classroom.js";
 import { updatePlayer } from "./core/player.js";
 import { init as initMolecule } from "./core/molecule.js";
+import { checkPlayerProximity } from "./core/classroom.js";
 
 let scene, camera, renderer, controls;
 let mainGroup;
@@ -84,4 +85,10 @@ function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+const nearest = checkPlayerProximity(player);
+if (nearest && keys["E"]) {
+  // misal: masuk mode molekul detail
+  enterMoleculePopupMode(nearest.key);
 }
