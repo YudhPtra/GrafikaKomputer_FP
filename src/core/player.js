@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { enterMoleculePopupMode } from "./popup.js";
+import { switchToMoleculeMode } from "../main.js";
+import { getNearestMolecule } from "./classroom.js";
 
 let player, playerModel, mixer, actions = {};
 let currentAction = "Idle";
@@ -20,11 +21,11 @@ export function setupPlayer(mainGroup, camera, controls) {
   controls.enabled = false;
   loadCharacter();
 
-  // Movement input
+  // 🔹 Input keyboard
   window.addEventListener("keydown", (e) => handleKey(e, true));
   window.addEventListener("keyup", (e) => handleKey(e, false));
 
-  // Mouse look
+  // 🔹 Mouse look
   let isMouseDown = false, lastX = 0, lastY = 0;
   window.addEventListener("mousedown", (e) => { isMouseDown = true; lastX = e.clientX; lastY = e.clientY; });
   window.addEventListener("mouseup", () => (isMouseDown = false));
@@ -35,13 +36,30 @@ export function setupPlayer(mainGroup, camera, controls) {
     yaw -= dx * 0.003;
     pitch = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, pitch - dy * 0.003));
   });
+
+  return player;
 }
 
 function handleKey(e, pressed) {
   const k = e.key.toLowerCase();
-  if (["w", "a", "s", "d"].includes(k)) moveState[{ w: "forward", s: "back", a: "left", d: "right" }[k]] = pressed;
-  if (k === "e") enterMoleculePopupMode();
-  if (k === " " && pressed) jump(); // tombol spasi untuk loncat
+
+  // WASD movement
+  if (["w", "a", "s", "d"].includes(k))
+    moveState[{ w: "forward", s: "back", a: "left", d: "right" }[k]] = pressed;
+
+  // Space → lompat
+  if (k === " " && pressed) jump();
+
+  // E → buka mode molekul (kalau ada molekul di dekat)
+  if (k === "e" && pressed) {
+    const molKey = getNearestMolecule(); // 🔹 dapatkan key molekul terdekat
+    if (molKey) {
+      console.log("🧪 Membuka molekul:", molKey);
+      switchToMoleculeMode(player, molKey); // ⬅️ kirim juga key-nya
+    } else {
+      console.log("❌ Tidak ada molekul di dekat karakter.");
+    }
+  }
 }
 
 export function updatePlayer(delta, camera) {
@@ -60,11 +78,14 @@ export function updatePlayer(delta, camera) {
     dir.normalize();
     const forward = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
     const right = new THREE.Vector3(forward.z, 0, -forward.x);
-    const worldDir = new THREE.Vector3().addScaledVector(forward, dir.z).addScaledVector(right, dir.x).normalize();
+    const worldDir = new THREE.Vector3()
+      .addScaledVector(forward, dir.z)
+      .addScaledVector(right, dir.x)
+      .normalize();
     player.position.addScaledVector(worldDir, 4 * delta);
   }
 
-  // --- FISIKA LOMPAT ---
+  // Fisika loncat
   velocityY += GRAVITY * delta;
   player.position.y += velocityY * delta;
   if (player.position.y <= PLAYER_RADIUS) {
@@ -73,7 +94,12 @@ export function updatePlayer(delta, camera) {
     isGrounded = true;
   }
 
-  const camOffset = new THREE.Vector3(Math.sin(yaw) * cameraDistance, cameraHeight + Math.sin(pitch) * 2, Math.cos(yaw) * cameraDistance);
+  // Kamera mengikuti
+  const camOffset = new THREE.Vector3(
+    Math.sin(yaw) * cameraDistance,
+    cameraHeight + Math.sin(pitch) * 2,
+    Math.cos(yaw) * cameraDistance
+  );
   const desiredCamPos = player.position.clone().add(camOffset);
   camera.position.lerp(desiredCamPos, 0.15);
   camera.lookAt(player.position.clone().add(new THREE.Vector3(0, 1, 0)));
@@ -85,7 +111,6 @@ function jump() {
   isGrounded = false;
 }
 
-// Ganti animasi
 function setAction(name) {
   if (!actions[name] || currentAction === name) return;
   const prev = actions[currentAction];
@@ -108,7 +133,6 @@ function loadCharacter() {
       actions[clip.name] = mixer.clipAction(clip);
     });
 
-    // mulai dari idle
     if (actions["Idle"]) actions["Idle"].play();
   });
 }

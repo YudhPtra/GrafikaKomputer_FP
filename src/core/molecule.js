@@ -7,11 +7,14 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { Sky } from 'three/addons/objects/Sky.js';
+import {switchToClassroomMode} from "../main.js";
 
 // export let mainGroup;
 // export function setMainGroup(group) {
 //   mainGroup = group;
 // }
+
+
 
 // DATA: Objek utama yang menyimpan semua informasi tentang atom dan molekul.
 const DATA = {
@@ -2463,6 +2466,7 @@ const DATA = {
     },
 };
 
+
 // Variabel global untuk scene Three.js, elemen DOM, dan state management.
 let scene, camera, renderer, controls, composer;
 // let mainGroup, defaultFont;
@@ -2489,85 +2493,141 @@ let activeState = { type: 'molecule', key: 'H2O', menu: null };
 const backButton = document.getElementById('back-btn');
 
 // Inisialisasi scene 3D, kamera, renderer, dan kontrol.
-export function init() {
-    body.classList.add('sidebar-collapsed');
-    console.log("Init Molecule Scene with group:", mainGroup);
-     
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(75, canvasContainer.clientWidth / canvasContainer.clientHeight, 0.1, 1000);
-    camera.position.z = 10;
-    
-    // Setup renderer WebGL.
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 0.5;  
-    canvasContainer.appendChild(renderer.domElement);
-    
-    // Setup skybox.
-    sky = new Sky();
-    sky.scale.setScalar(450000);
-    scene.add(sky);
-    sun = new THREE.Vector3();
-    const effectController = { turbidity: 10, rayleigh: 3, mieCoefficient: 0.005, mieDirectionalG: 0.7, elevation: -1, azimuth: 180, exposure: renderer.toneMappingExposure };
-    function guiChanged() { // Fungsi untuk mengupdate properti skybox.
-        const uniforms = sky.material.uniforms;
-        uniforms[ 'turbidity' ].value = effectController.turbidity;
-        uniforms[ 'rayleigh' ].value = effectController.rayleigh;
-        uniforms[ 'mieCoefficient' ].value = effectController.mieCoefficient;
-        uniforms[ 'mieDirectionalG' ].value = effectController.mieDirectionalG;
-        const phi = THREE.MathUtils.degToRad( 90 - effectController.elevation );
-        const theta = THREE.MathUtils.degToRad( effectController.azimuth );
-        sun.setFromSphericalCoords( 1, phi, theta );
-        uniforms[ 'sunPosition' ].value.copy( sun );
-        renderer.toneMappingExposure = effectController.exposure;
-    }
-    guiChanged();
-    
-    // Grup utama untuk menampung semua objek molekul.
-    mainGroup = new THREE.Group();
-    scene.add(mainGroup);
-    
-    // Setup pencahayaan.
-    const ambientLight = new THREE.AmbientLight(0xcccccc, 0.7);
-    scene.add(ambientLight);
-    const pointLight = new THREE.PointLight(0xffffff, 5, 100);
-    pointLight.position.set(0, 5, 10);
-    pointLight.castShadow = true;
-    scene.add(pointLight);
-    
-    // Setup kontrol orbit (untuk memutar, zoom, pan).
-    controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    
-    // Setup post-processing untuk efek bloom (cahaya).
-    const renderPass = new RenderPass(scene, camera);
-    const bloomPass = new UnrealBloomPass( new THREE.Vector2(canvasContainer.clientWidth, canvasContainer.clientHeight), 0.15, 0.8, 0.99 );
-    composer = new EffectComposer(renderer);
-    composer.addPass(renderPass);
-    composer.addPass(bloomPass);
+let moleculeRunning = false;
+let moleculeAnimationId = null;
 
-    // Menambahkan event listener untuk interaksi mouse.
-    renderer.domElement.addEventListener("click", onClick, false);
-    renderer.domElement.addEventListener('dblclick', onDoubleClick, false);
-    renderer.domElement.addEventListener('mousemove', onMouseMove, false);
-    
-    // Membuat tekstur untuk glow elektron.
-    electronGlowTexture = createGlowTexture('rgba(255, 255, 255, 1.0)', 'rgba(255, 255, 255, 0.0)');
-    
-    // Memuat font, lalu memulai aplikasi.
-    const fontLoader = new FontLoader();
-    fontLoader.load("https://cdn.jsdelivr.net/npm/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json", (font) => {
-        defaultFont = font;
-        buildSidebar();
-        displayMolecule("H2O");
-        setupUIListeners();
-        animate();
-    });
-    window.addEventListener("resize", onWindowResize);
+export function init(addBackButton, moleculeKey = "H2O") {
+      console.log("Init Molecule Scene for:", moleculeKey);
+  moleculeRunning = true;
+  
+  const body = document.body;
+  body.classList.add("sidebar-collapsed");
+  console.log("Init Molecule Scene...");
+
+  // ✅ Ambil canvas molecule setiap kali init dipanggil
+  const moleculeCanvas = document.getElementById("molecule-canvas");
+  if (!moleculeCanvas) {
+    console.error("❌ Canvas molecule tidak ditemukan!");
+    return;
+  }
+
+  const width = moleculeCanvas.clientWidth || window.innerWidth;
+  const height = moleculeCanvas.clientHeight || window.innerHeight;
+
+  // Tandai bahwa scene molecule sedang aktif
+  moleculeRunning = true;
+
+  // ✅ Buat scene & kamera
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+  camera.position.z = 10;
+
+  // ✅ Buat renderer dari canvas yang benar
+  renderer = new THREE.WebGLRenderer({
+    canvas: moleculeCanvas,
+    antialias: true,
+  });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(width, height);
+  renderer.shadowMap.enabled = true;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.5;
+
+  // ✅ Skybox
+  sky = new Sky();
+  sky.scale.setScalar(450000);
+  scene.add(sky);
+  sun = new THREE.Vector3();
+
+  const effectController = {
+    turbidity: 10,
+    rayleigh: 3,
+    mieCoefficient: 0.005,
+    mieDirectionalG: 0.7,
+    elevation: -1,
+    azimuth: 180,
+    exposure: renderer.toneMappingExposure,
+  };
+
+  function guiChanged() {
+    const uniforms = sky.material.uniforms;
+    uniforms["turbidity"].value = effectController.turbidity;
+    uniforms["rayleigh"].value = effectController.rayleigh;
+    uniforms["mieCoefficient"].value = effectController.mieCoefficient;
+    uniforms["mieDirectionalG"].value = effectController.mieDirectionalG;
+
+    const phi = THREE.MathUtils.degToRad(90 - effectController.elevation);
+    const theta = THREE.MathUtils.degToRad(effectController.azimuth);
+    sun.setFromSphericalCoords(1, phi, theta);
+    uniforms["sunPosition"].value.copy(sun);
+    renderer.toneMappingExposure = effectController.exposure;
+  }
+  guiChanged();
+
+  // ✅ Grup utama
+  mainGroup = new THREE.Group();
+  scene.add(mainGroup);
+
+  // ✅ Pencahayaan
+  const ambientLight = new THREE.AmbientLight(0xcccccc, 0.7);
+  scene.add(ambientLight);
+  const pointLight = new THREE.PointLight(0xffffff, 5, 100);
+  pointLight.position.set(0, 5, 10);
+  pointLight.castShadow = true;
+  scene.add(pointLight);
+
+  // ✅ OrbitControls
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+
+  // ✅ Post-processing
+  const renderPass = new RenderPass(scene, camera);
+  const bloomPass = new UnrealBloomPass(
+    new THREE.Vector2(width, height),
+    0.15,
+    0.8,
+    0.99
+  );
+  composer = new EffectComposer(renderer);
+  composer.addPass(renderPass);
+  composer.addPass(bloomPass);
+
+  // ✅ Event listener mouse
+  renderer.domElement.addEventListener("click", onClick, false);
+  renderer.domElement.addEventListener("dblclick", onDoubleClick, false);
+  renderer.domElement.addEventListener("mousemove", onMouseMove, false);
+
+  // ✅ Tekstur glow elektron
+  electronGlowTexture = createGlowTexture(
+    "rgba(255, 255, 255, 1.0)",
+    "rgba(255, 255, 255, 0.0)"
+  );
+
+  // ✅ Load font dan mulai render loop
+  const fontLoader = new FontLoader();
+  fontLoader.load(
+    "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json",
+    (font) => {
+      defaultFont = font;
+      buildSidebar();
+    //   displayMolecule("H2O");
+       displayMolecule(moleculeKey); 
+      setupUIListeners();
+      addBackButton(); // tombol "Back to Classroom"
+      startMoleculeRender(); // mulai render loop
+    }
+  );
+
+  // ✅ Responsive resize
+  window.addEventListener("resize", () => {
+    const w = moleculeCanvas.clientWidth || window.innerWidth;
+    const h = moleculeCanvas.clientHeight || window.innerHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
 }
+
 
 // Loop utama animasi yang dijalankan setiap frame.
 function animate() {
@@ -4972,3 +5032,88 @@ tweenScript.onload = () => {
     requestAnimationFrame(animateTween);
     // init(); // Panggil fungsi init utama setelah TWEEN siap.
 };
+
+export function addBackButton() {
+  // Jika sudah ada tombol, jangan buat lagi
+  if (document.getElementById("back-to-classroom")) return;
+
+  const btn = document.createElement("button");
+  btn.id = "back-to-classroom";
+  btn.textContent = "← Back to Classroom";
+  Object.assign(btn.style, {
+    position: "fixed",
+    top: "20px",
+    right: "20px",          // ⬅️ pindah ke kanan atas
+    padding: "10px 16px",
+    background: "rgba(0, 0, 0, 0.7)",
+    color: "white",
+    fontFamily: "Arial, sans-serif",
+    fontSize: "14px",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    zIndex: "9999",         // ⬅️ pastikan di atas canvas
+  });
+
+  btn.addEventListener("mouseenter", () => {
+    btn.style.background = "rgba(255, 255, 255, 0.15)";
+  });
+  btn.addEventListener("mouseleave", () => {
+    btn.style.background = "rgba(0, 0, 0, 0.7)";
+  });
+
+btn.addEventListener("click", () => {
+  stopMoleculeRender(); // hentikan render loop molecule
+  switchToClassroomMode(); // ganti canvas kembali
+});
+
+  document.body.appendChild(btn);
+}
+
+
+let moleculeActive = false;
+// let moleculeAnimationId = null;
+
+function animateMolecule() {
+  if (!moleculeActive) return;
+  moleculeAnimationId = requestAnimationFrame(animateMolecule);
+  controls.update();
+  composer.render();
+}
+
+
+export function startMoleculeRender() {
+  moleculeActive = true;
+  animateMolecule();
+}
+
+export function stopMoleculeRender() {
+  console.log("🧊 Stopping molecule render...");
+
+  moleculeRunning = false;
+
+  // Hapus event listener agar tidak dobel
+  if (renderer && renderer.domElement) {
+    renderer.domElement.replaceWith(renderer.domElement.cloneNode(true));
+  }
+
+  // ✅ Lepas GPU context dengan aman
+  try {
+    if (renderer && renderer.getContext) {
+      const gl = renderer.getContext();
+      const loseCtx = gl.getExtension("WEBGL_lose_context");
+      if (loseCtx) loseCtx.loseContext();
+    }
+  } catch (err) {
+    console.warn("⚠️ Failed to lose WebGL context:", err);
+  }
+
+  // Bersihkan scene agar tidak bocor
+  scene = null;
+  camera = null;
+  controls = null;
+  composer = null;
+  renderer = null;
+
+  console.log("✅ Molecule scene fully stopped.");
+}

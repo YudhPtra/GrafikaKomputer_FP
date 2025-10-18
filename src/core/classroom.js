@@ -9,6 +9,9 @@ export const moleculesOnDesks = [];
 let highlightMesh = null;
 let interactionText = null;
 
+// === Variabel tambahan untuk menyimpan molekul terdekat ===
+let nearestMolecule = null;
+
 export function createClassroomEnvironment(mainGroup, scene) {
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
   scene.add(ambientLight);
@@ -115,7 +118,7 @@ export function setupClassroom(mainGroup, rows = 3, cols = 4) {
       window.mainGroup = oldMainGroup;
 
       const molInstance = tempGroup;
-      molInstance.scale.setScalar(0.4); // 🔹 Molekul diperkecil
+      molInstance.scale.setScalar(0.4);
       molInstance.position.y = 1.2;
 
       desk.add(molInstance);
@@ -146,24 +149,39 @@ function createInteractionText() {
 function setHighlight(target) {
   if (!target) {
     if (highlightMesh) {
-      highlightMesh.material.emissiveIntensity = 0;
+      highlightMesh.traverse((child) => {
+        if (child.isMesh && child.material) {
+          child.material.emissive = new THREE.Color(0x000000);
+          child.material.emissiveIntensity = 0;
+        }
+      });
+      highlightMesh = null;
     }
     if (interactionText) interactionText.style.display = "none";
+    nearestMolecule = null;
     return;
   }
-  const mesh = target.mesh;
-  if (!mesh) return;
 
-  // Highlight dengan emissive glow
+  const mesh = target.mesh;
+  if (highlightMesh && highlightMesh !== mesh) {
+    highlightMesh.traverse((child) => {
+      if (child.isMesh && child.material) {
+        child.material.emissive = new THREE.Color(0x000000);
+        child.material.emissiveIntensity = 0;
+      }
+    });
+  }
+
   mesh.traverse((child) => {
     if (child.isMesh && child.material) {
-      child.material.emissive = new THREE.Color(0x00ffff);
-      child.material.emissiveIntensity = 0.8;
+      child.material.emissive = new THREE.Color(0xffff00); // 🔶 kuning
+      child.material.emissiveIntensity = 1.2;
     }
   });
 
   highlightMesh = mesh;
-  interactionText.style.display = "block";
+  nearestMolecule = target.key; // 🔹 Simpan key molekul yang terdekat
+  if (interactionText) interactionText.style.display = "block";
 }
 
 /** Mengecek apakah player dekat dengan molekul */
@@ -172,7 +190,9 @@ export function checkPlayerProximity(player) {
   let minDist = Infinity;
 
   for (const { mesh, key } of moleculesOnDesks) {
-    const dist = player.position.distanceTo(mesh.getWorldPosition(new THREE.Vector3()));
+    const dist = player.position.distanceTo(
+      mesh.getWorldPosition(new THREE.Vector3())
+    );
     if (dist < 2.5 && dist < minDist) {
       nearest = { mesh, key };
       minDist = dist;
@@ -183,6 +203,11 @@ export function checkPlayerProximity(player) {
   else setHighlight(null);
 
   return nearest;
+}
+
+// 🔹 Getter agar file lain (player.js) bisa tahu molekul mana yang sedang dekat
+export function getNearestMolecule() {
+  return nearestMolecule;
 }
 
 /** Entry point utama untuk scene classroom */
