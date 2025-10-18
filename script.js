@@ -4775,14 +4775,15 @@ function drawCarbonNanotube() {
 }
 
 function drawDNA() {
-    const numBasePairs = 12;
-    const helixRadius = 4.0;
-    const helixPitch = 12.0;
-    const basePairDistance = 2.0;
+    const numBasePairs = 12;        
+    const helixRadius = 4.0;        
+    const helixPitch = 12.0;        
+    const basePairDistance = 2.0;   
     const bondRadius = 0.08;
-    const atoms = { strand1: [], strand2: [], bases1: [], bases2: [] };
-    const colorAT = { A: 0x4169E1, T: 0xFF4500 };
-    const colorGC = { G: 0x32CD32, C: 0xFFD700 };
+
+    const atoms = { strand1: [], strand2: [], bases1: [], bases2: [] }; 
+    const colorAT = { A: 0x4169E1, T: 0xFF4500 }; 
+    const colorGC = { G: 0x32CD32, C: 0xFFD700 }; 
 
     for (let i = 0; i < numBasePairs; i++) {
         const angle = (i / helixPitch) * 2 * Math.PI;
@@ -4797,27 +4798,38 @@ function drawDNA() {
         p2.position.set(-helixRadius * Math.cos(angle), -helixRadius * Math.sin(angle), z);
         atoms.strand2.push(p2);
         mainGroup.add(p2);
-        
+
         if (i > 0) {
-            mainGroup.add(createBondMesh(atoms.strand1[i-1].position, p1.position, 0.1));
-            mainGroup.add(createBondMesh(atoms.strand2[i-1].position, p2.position, 0.1));
+            mainGroup.add(createBondMesh(atoms.strand1[i - 1].position, p1.position, 0.1));
+            mainGroup.add(createBondMesh(atoms.strand2[i - 1].position, p2.position, 0.1));
         }
 
-        const isATpair = Math.random() > 0.5;
-        const base1 = createAtomMesh(DATA.atoms.N.radius, isATpair ? colorAT.A : colorGC.G, isATpair ? 'A' : 'G');
-        const base2 = createAtomMesh(DATA.atoms.N.radius, isATpair ? colorAT.T : colorGC.C, isATpair ? 'T' : 'C');
-        
-        base1.position.copy(p1.position).lerp(p2.position, 0.3);
-        base2.position.copy(p2.position).lerp(p1.position, 0.3);
-        mainGroup.add(base1, base2);
+        const isATpair = Math.random() > 0.5; 
+        const baseSymbol1 = isATpair ? 'A' : 'G';
+        const baseSymbol2 = isATpair ? 'T' : 'C';
+        const baseColor1 = isATpair ? colorAT.A : colorGC.G;
+        const baseColor2 = isATpair ? colorAT.T : colorGC.C;
 
+        const base1 = createAtomMesh(DATA.atoms.N.radius, baseColor1, baseSymbol1);
+        const base2 = createAtomMesh(DATA.atoms.N.radius, baseColor2, baseSymbol2);
+
+        base1.userData.type = 'base_placeholder';
+        base2.userData.type = 'base_placeholder';
+        base1.position.copy(p1.position).lerp(p2.position, 0.3); 
+        base2.position.copy(p2.position).lerp(p1.position, 0.3); 
+        atoms.bases1.push(base1);
+        atoms.bases2.push(base2);
+        
+        mainGroup.add(base1, base2);
         mainGroup.add(createBondMesh(p1.position, base1.position, bondRadius));
         mainGroup.add(createBondMesh(p2.position, base2.position, bondRadius));
 
         const numHBonds = isATpair ? 2 : 3;
         for (let j = 0; j < numHBonds; j++) {
-            const offset = new THREE.Vector3(0, (j - (numHBonds-1)/2) * 0.5, 0);
-            mainGroup.add(createBondMesh(base1.position.clone().add(offset), base2.position.clone().add(offset), 0.04));
+            const offsetAmount = 0.5;
+            const offset = new THREE.Vector3(0, (j - (numHBonds - 1) / 2) * offsetAmount, 0);
+            offset.applyAxisAngle(new THREE.Vector3(0,0,1), angle + Math.PI/2);
+            mainGroup.add(createBondMesh(base1.position.clone().add(offset), base2.position.clone().add(offset), 0.04)); 
         }
     }
 
@@ -4825,9 +4837,13 @@ function drawDNA() {
 
     mainGroup.children.forEach(child => {
         child.position.z -= helixCenterZ;
+        if (child.userData && child.userData.initialPosition) {
+             child.userData.initialPosition.z -= helixCenterZ;
+        }
     });
-    camera.position.set(helixRadius * 3, helixRadius * 2, 0); // Z sekarang 0
-    controls.target.set(0, 0, 0); // Target sekarang SELALU di (0,0,0)
+
+    camera.position.set(helixRadius * 3, helixRadius * 2, 0);
+    controls.target.set(0, 0, 0);
 }
 
 function drawOxygen() {
