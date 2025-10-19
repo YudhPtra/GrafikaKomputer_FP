@@ -83,6 +83,9 @@ export function updatePlayer(delta, camera) {
       .addScaledVector(right, dir.x)
       .normalize();
     player.position.addScaledVector(worldDir, 4 * delta);
+
+    const angle = Math.atan2(worldDir.x, worldDir.z);
+  player.rotation.y = angle;
   }
 
   // Fisika loncat

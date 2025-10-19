@@ -118,7 +118,7 @@ body {
 
 /* Panel untuk menampilkan informasi detail atom di kanan atas. */
 #detail-info-panel {
-    position: absolute;
+    position: fixed;
     top: 20px;
     right: 20px;
     background-color: rgba(255, 255, 255, 0.95);
@@ -134,6 +134,8 @@ body {
     transform: translateX(0);
     scroll-behavior: smooth;
     flex-shrink: 0;
+    z-index: 2000;
+    pointer-events: auto;
 }
 
 /* State tersembunyi untuk panel info detail. */
@@ -167,7 +169,7 @@ body {
 
 /* Panel untuk menampilkan info molekul di kiri bawah. */
 #molecule-info-panel {
-    position: absolute;
+    position: fixed;
     bottom: 20px;
     left: 20px;
     background-color: rgba(255, 255, 255, 0.9);
@@ -179,7 +181,7 @@ body {
     /* Transisi untuk posisi 'left' agar bergerak mulus saat sidebar muncul/hilang. */
     transition: opacity 0.3s ease, transform 0.3s ease, left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     transform: translateY(0);
-    z-index: 50;
+    z-index: 1000;
 }
 
 /* Menyesuaikan posisi panel info saat sidebar tertutup. */
