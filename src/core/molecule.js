@@ -2631,46 +2631,73 @@ export function init(addBackButton, moleculeKey = "H2O") {
 
 // Loop utama animasi yang dijalankan setiap frame.
 function animate() {
-    requestAnimationFrame(animate);
-    controls.update();
-    
+    // requestAnimationFrame(animate); // Hapus atau komentari jika kamu punya animateMolecule()
+
+    // Pastikan controls, clock, composer ada sebelum diakses
+    if (controls) controls.update();
+    if (!clock || !composer) return; // Keluar jika belum siap
+
     const delta = clock.getDelta();
-    
+
     // Menganimasikan pergerakan elektron di orbitnya.
-    if (!isAnimationPaused && electronsToAnimate.length > 0) {
+    // Pastikan electronsToAnimate dan electronShells ada
+    if (!isAnimationPaused && electronsToAnimate && electronsToAnimate.length > 0) {
         electronsToAnimate.forEach(e => {
-            e.progress = (e.progress + e.speed * delta) % 1;
-            const newPosition = e.curve.getPoint(e.progress);
-            const posVec = new THREE.Vector3(newPosition.x, newPosition.y, 0);
-            posVec.applyEuler(e.orbitGroup.rotation);
-            e.object.position.copy(posVec);
+            // Pastikan e, e.curve, e.object, e.orbitGroup ada
+            if (e && e.curve && e.object && e.orbitGroup && e.orbitGroup.rotation) { // Tambah check e.orbitGroup.rotation
+                e.progress = (e.progress + e.speed * delta) % 1;
+                const newPosition = e.curve.getPoint(e.progress);
+                const posVec = new THREE.Vector3(newPosition.x, newPosition.y, 0);
+                // === KEMBALIKAN BARIS INI ===
+                posVec.applyEuler(e.orbitGroup.rotation); // Terapkan rotasi spesifik orbit line
+                // ============================
+                e.object.position.copy(posVec); // Set posisi relatif thd shellGroup
+            } else {
+                 // console.warn("Skipping electron animation due to missing data:", e); // Log jika ada data hilang
+            }
         });
-        electronShells.forEach((shell) => {
-            shell.rotation.y += 0.001;
-            shell.rotation.x += 0.0005;
-        });
+
+        // Rotasi seluruh shell group
+        // Pastikan electronShells ada
+        if (electronShells) {
+            electronShells.forEach((shell) => {
+                if (shell) { // Pastikan shell-nya ada
+                   shell.rotation.y += 0.001;
+                   shell.rotation.x += 0.0005;
+                }
+            });
+        }
     }
-    
+
     // Menerapkan animasi 'sway' (goyangan) pada atom dalam molekul.
-    if (activeState.type === 'molecule') {
+    // Pastikan activeState dan mainGroup ada
+    if (activeState && activeState.type === 'molecule' && mainGroup && mainGroup.children) {
        const elapsedTime = clock.getElapsedTime();
        mainGroup.children.forEach(child => {
-         if (child.userData.type === 'atom' && child.userData.initialPosition) {
-           const initialPos = child.userData.initialPosition;
-           const swayX = Math.sin(elapsedTime * 1.1 + initialPos.y) * 0.08;
-           const swayY = Math.cos(elapsedTime * 1.3 + initialPos.x) * 0.07;
-           child.position.set(initialPos.x + swayX, initialPos.y + swayY, initialPos.z);
+         // Pastikan child dan userData lengkap
+         if (child && child.userData && typeof child.userData.type !== 'undefined' && child.userData.initialPosition) {
+             if(child.userData.type === 'atom') { // Hanya animasikan atom
+                const initialPos = child.userData.initialPosition;
+                const swayX = Math.sin(elapsedTime * 1.1 + initialPos.y) * 0.08;
+                const swayY = Math.cos(elapsedTime * 1.3 + initialPos.x) * 0.07;
+                // Pastikan child.position bisa diakses
+                if (child.position) {
+                    child.position.set(initialPos.x + swayX, initialPos.y + swayY, initialPos.z);
+                }
+             }
          }
        });
     }
-    
-    // Membuat label teks selalu menghadap kamera (billboarding).
-    textLabelsToBillboard.forEach((label) => {
-      if (label) label.quaternion.copy(camera.quaternion);
-    });
 
-    // Merender scene dengan efek post-processing.
-    composer.render();
+    // Membuat label teks selalu menghadap kamera (billboarding).
+    // Pastikan textLabelsToBillboard dan camera ada
+    if (textLabelsToBillboard && camera) {
+        textLabelsToBillboard.forEach((label) => {
+            if (label) label.quaternion.copy(camera.quaternion);
+        });
+    }
+
+    // composer.render(); // Pindahkan render ke animateMolecule()
 }
 
 // Membersihkan semua objek dari scene utama untuk render baru.
@@ -2742,12 +2769,19 @@ function displayAtomDetail(atomKey) {
 
 // Menampilkan model kelopak elektron untuk sebuah atom.
 function displayElectronShell(atomKey) {
-    clearScene();
+    clearScene(); // Pastikan clearScene membersihkan electronsToAnimate dan electronShells
     const data = DATA.atoms[atomKey];
     if (!data || !data.electrons) return;
-    
+
+    // Pastikan array animasi kosong sebelum diisi lagi
+    electronsToAnimate = [];
+    electronShells = [];
+
     const parentAtomState = activeState.type === 'atom' ? activeState : activeState.parentAtomState;
-    activeState = { type: 'electron_shell', key: atomKey, parentMolecule: parentAtomState.parentMolecule };
+    // Pastikan parentAtomState dan parentMolecule ada sebelum digunakan
+    const parentMoleculeKey = parentAtomState?.parentMolecule || 'H2O'; // Fallback jika undefined
+    activeState = { type: 'electron_shell', key: atomKey, parentMolecule: parentMoleculeKey };
+
 
     backButton.innerHTML = `&larr; Kembali ke Detail Atom`;
     backButton.classList.remove('hidden');
@@ -2759,62 +2793,92 @@ function displayElectronShell(atomKey) {
     const nucleusMaterial = new THREE.MeshBasicMaterial({ color: data.color });
     const nucleusGeometry = new THREE.SphereGeometry(data.radius, 32, 32);
     const nucleus = new THREE.Mesh(nucleusGeometry, nucleusMaterial);
-    mainGroup.add(nucleus);
+    // Pastikan mainGroup ada sebelum menambahkan objek
+     if (mainGroup) mainGroup.add(nucleus); else console.error("mainGroup is null in displayElectronShell!");
+
 
     const nucleusGlow = new THREE.Sprite(new THREE.SpriteMaterial({
         map: createGlowTexture(`rgba(255, 255, 255, 0.5)`, `rgba(255, 255, 255, 0.0)`),
-        color: data.color, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false
+        color: data.color, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false // Coba ubah depthWrite jadi true jika masih bermasalah
     }));
     nucleusGlow.scale.set(data.radius * 4, data.radius * 4, 1.0);
-    mainGroup.add(nucleusGlow);
+     if (mainGroup) mainGroup.add(nucleusGlow);
 
     // Iterasi setiap kelopak elektron dan buat orbit serta elektronnya.
     data.electrons.forEach((electronCount, shellIndex) => {
         const shellRadius = data.radius * 2.5 + (shellIndex * 3.0);
-        const shellGroup = new THREE.Group();
-        mainGroup.add(shellGroup);
-        electronShells.push(shellGroup);
+        const shellGroup = new THREE.Group(); // Ini adalah grup untuk satu kelopak/shell
+        if (mainGroup) mainGroup.add(shellGroup);
+        electronShells.push(shellGroup); // Masukkan grup kelopak ke array
 
-        const orbitCount = electronCount > 2 ? 5 : 1; // Tentukan jumlah orbit.
+        const orbitCount = electronCount > 2 ? 5 : 1; // Tentukan jumlah orbit per kelopak
         const orbitMaterial = new THREE.LineBasicMaterial({ color: 0x88ddff, transparent: true, opacity: 0.35 });
-        const electronMaterial = new THREE.SpriteMaterial({
-            map: electronGlowTexture, color: 0xffffff, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false
-        });
 
-        const orbitData = [];
+        // --- KEMBALIKAN MATERIAL GLOW ASLI ---
+        // Pastikan electronGlowTexture sudah terdefinisi sebelum digunakan
+        if (!electronGlowTexture) {
+             console.error("electronGlowTexture is not defined!");
+             // Fallback ke material solid jika tekstur gagal
+             electronGlowTexture = new THREE.Color(0xffffff); // Placeholder
+        }
+        const electronMaterial = new THREE.SpriteMaterial({
+            map: electronGlowTexture instanceof THREE.Texture ? electronGlowTexture : null, // Pastikan map adalah Texture
+            color: 0xffffff,
+            blending: THREE.AdditiveBlending,
+            transparent: true,
+            depthWrite: false // <-- Coba ubah ini jadi true jika elektron masih tersembunyi
+        });
+        // --- AKHIR PENGEMBALIAN MATERIAL ---
+
+        const orbitData = []; // Data untuk orbit-orbit DALAM satu kelopak ini
         for(let i = 0; i < orbitCount; i++) {
             const curve = new THREE.EllipseCurve(0, 0, shellRadius, shellRadius, 0, 2 * Math.PI, false, 0);
             const points = curve.getPoints(64);
             const geometry = new THREE.BufferGeometry().setFromPoints(points);
-            const orbitLine = new THREE.Line(geometry, orbitMaterial);
+            const orbitLine = new THREE.Line(geometry, orbitMaterial); // Ini hanya garis orbitnya
+            // Terapkan rotasi pada garis orbitnya agar tersebar
             orbitLine.rotation.y = (i / orbitCount) * Math.PI;
             orbitLine.rotation.x = Math.PI / 3;
-            shellGroup.add(orbitLine);
-            orbitData.push({ line: orbitLine, curve: curve });
+            shellGroup.add(orbitLine); // Tambahkan garis orbit ke grup kelopak
+            orbitData.push({ line: orbitLine, curve: curve }); // Simpan line dan curve
         }
 
-        // Distribusikan elektron secara merata di antara orbit yang tersedia.
+        // Distribusikan elektron secara merata di antara orbit yang tersedia DALAM KELOPAK INI.
         for (let i = 0; i < electronCount; i++) {
             const targetOrbitIndex = i % orbitCount;
-            const { line: targetOrbit, curve: targetCurve } = orbitData[targetOrbitIndex];
+            // Ambil data kurva dan garis orbit yang sesuai
+            const { line: targetOrbitLine, curve: targetCurve } = orbitData[targetOrbitIndex]; // Ambil line dan curve
             const electronIndexInOrbit = Math.floor(i / orbitCount);
             const baseElectronCount = Math.floor(electronCount / orbitCount);
             const remainder = electronCount % orbitCount;
             const totalElectronsInOrbit = baseElectronCount + (targetOrbitIndex < remainder ? 1 : 0);
             const progress = totalElectronsInOrbit > 0 ? (electronIndexInOrbit / totalElectronsInOrbit) : 0;
-            const electronSprite = new THREE.Sprite(electronMaterial);
-            electronSprite.scale.set(1.5, 1.5, 1.0);
-            shellGroup.add(electronSprite); 
+
+            const electronSprite = new THREE.Sprite(electronMaterial); // Gunakan material glow
+            electronSprite.scale.set(1.5, 1.5, 1.0); // Kembalikan skala asli (atau sesuaikan jika perlu)
+            shellGroup.add(electronSprite); // Tambahkan sprite elektron ke grup kelopak
+
+            // Data untuk animasi
             electronsToAnimate.push({
-                object: electronSprite, curve: targetCurve, orbitGroup: targetOrbit,
-                progress: progress, speed: 0.12 + Math.random() * 0.06
+                 object: electronSprite,    // Sprite elektronnya
+                 curve: targetCurve,        // Kurva elips (TIDAK berotasi)
+                 orbitGroup: targetOrbitLine, // <-- SIMPAN REFERENSI ke orbitLine (PENTING untuk animate)
+                 progress: progress,
+                 speed: 0.12 + Math.random() * 0.06
             });
+             console.log(`✨ Added electron ${i + 1}/${electronCount} for shell ${shellIndex}. orbitGroup refers to line:`, targetOrbitLine.uuid); // Log penambahan dan pastikan orbitGroup ada
         }
     });
 
     buildSidebar();
-    camera.position.set(0, 0, data.electrons.length * 10 + 5); // Jauhkan kamera agar semua kelopak terlihat.
-    controls.target.set(0, 0, 0);
+    // Pastikan camera dan controls ada
+    if(camera && controls) {
+        camera.position.set(0, 0, data.electrons.length * 10 + 5); // Jauhkan kamera agar semua kelopak terlihat.
+        controls.target.set(0, 0, 0);
+        controls.update(); // Update controls setelah mengubah target/posisi kamera
+    } else {
+        console.error("Camera or controls missing in displayElectronShell!");
+    }
 }
 
 // Menangani klik pada atom untuk menampilkan detailnya.
@@ -2843,43 +2907,91 @@ function onDoubleClick(event) {
 
 // Mengatur semua event listener untuk elemen UI (tombol, dll).
 function setupUIListeners() {
-    // Listener untuk tombol kembali.
-    backButton.addEventListener('click', () => {
-        if (activeState.type === 'electron_shell') {
-            displayAtomDetail(activeState.key);
-        } else if (activeState.type === 'atom') {
-            displayMolecule(activeState.parentMolecule);
-        }
-    });
-
-    // Listener untuk tombol tutup panel detail.
-    document.getElementById('close-detail-info-btn').addEventListener('click', () => {
-        detailInfoPanel.classList.add('hidden'); // Sembunyikan panel detail
-
-        // Jika kita sedang dalam mode molekul, tampilkan kembali panel info molekul.
-        if (activeState.type === 'molecule') {
-            const moleculeData = DATA.molecules[activeState.key];
-            if (moleculeData) {
-                // Panggil lagi fungsi update untuk memastikan kontennya benar & hapus class 'hidden'
-                updateMoleculeInfoPanel(moleculeData.name, moleculeData.description);
+    // --- Listener Tombol Kembali Internal (Molecule/Atom/Shell) ---
+    const backBtnInternal = document.getElementById('back-btn');
+    if (backBtnInternal) {
+        // Gunakan cloneNode untuk memastikan listener lama bersih
+        const backBtnClone = backBtnInternal.cloneNode(true);
+        // Gunakan optional chaining (?.) untuk parentNode jika elemen mungkin tidak ada di DOM
+        backBtnInternal.parentNode?.replaceChild(backBtnClone, backBtnInternal);
+        backBtnClone.addEventListener('click', () => {
+            if (!moleculeRunning) return; // Cek jika scene masih aktif
+            if (activeState.type === 'electron_shell') {
+                displayAtomDetail(activeState.key);
+            } else if (activeState.type === 'atom') {
+                // Pastikan parentMolecule ada sebelum navigasi
+                if (activeState.parentMolecule) {
+                    displayMolecule(activeState.parentMolecule);
+                } else {
+                    console.warn("Parent molecule key missing in state.");
+                    // Fallback ke molekul default jika perlu
+                    // displayMolecule('H2O');
+                }
             }
-            // Reset menu detail yang aktif
-            activeState.menu = null;
-            buildSidebar(); // Update sidebar
-        }
-    });
+        });
+    } else {
+        console.warn("⚠️ Tombol #back-btn tidak ditemukan.");
+    }
 
-    // Listener untuk tombol tutup panel info molekul.
-    document.getElementById('close-molecule-info-btn').addEventListener('click', () => {
-        moleculeInfoPanel.classList.add('hidden');
-    });
+    // --- Listener Tombol Tutup Panel Detail ---
+    const closeDetailBtn = document.getElementById('close-detail-info-btn');
+    if (closeDetailBtn) {
+        const closeDetailBtnClone = closeDetailBtn.cloneNode(true);
+        closeDetailBtn.parentNode?.replaceChild(closeDetailBtnClone, closeDetailBtn);
+        closeDetailBtnClone.addEventListener('click', () => {
+            detailInfoPanel.classList.add('hidden');
+            if (activeState.type === 'molecule') {
+                const moleculeData = DATA.molecules[activeState.key];
+                if (moleculeData) {
+                    updateMoleculeInfoPanel(moleculeData.name, moleculeData.description);
+                }
+                activeState.menu = null; // Reset menu detail molekul
+                buildSidebar(); // Update sidebar untuk hilangkan state 'active' di menu
+            }
+        });
+    } else {
+        console.warn("⚠️ Tombol #close-detail-info-btn tidak ditemukan.");
+    }
 
-    // Listener untuk tombol toggle sidebar.
-    // document.getElementById('sidebar-toggle').addEventListener('click', () => {
-    //     document.getElementById('sidebar').classList.toggle('collapsed');
-    //     body.classList.toggle('sidebar-collapsed');
-    //     setTimeout(onWindowResize, 350); // Resize canvas setelah animasi sidebar selesai.
-    // });
+    // --- Listener Tombol Tutup Panel Info Molekul ---
+    const closeMoleculeBtn = document.getElementById('close-molecule-info-btn');
+     if (closeMoleculeBtn) {
+        const closeMoleculeBtnClone = closeMoleculeBtn.cloneNode(true);
+        closeMoleculeBtn.parentNode?.replaceChild(closeMoleculeBtnClone, closeMoleculeBtn);
+        closeMoleculeBtnClone.addEventListener('click', () => {
+            moleculeInfoPanel.classList.add('hidden');
+        });
+    } else {
+        console.warn("⚠️ Tombol #close-molecule-info-btn tidak ditemukan.");
+    }
+
+    // --- Listener Tombol Toggle Sidebar ---
+    const sidebar = document.getElementById("sidebar");
+    const toggleBtn = document.getElementById("sidebar-toggle");
+    const bodyElement = document.body; // Ambil referensi body sekali
+
+    if (sidebar && toggleBtn && bodyElement) {
+        // Hapus listener lama dengan clone trick (lebih aman)
+        const newToggleBtn = toggleBtn.cloneNode(true);
+        toggleBtn.parentNode?.replaceChild(newToggleBtn, toggleBtn);
+
+        // Tambahkan listener BARU ke tombol yang baru di-clone
+        newToggleBtn.addEventListener("click", () => {
+            console.log("✅ Sidebar toggle diklik!");
+            sidebar.classList.toggle("collapsed");
+            bodyElement.classList.toggle("sidebar-collapsed"); // <-- PENTING: Toggle class di body
+            console.log("🔄 Sidebar toggled:", sidebar.classList.contains("collapsed") ? "Tertutup" : "Terbuka");
+
+            // Beri sedikit waktu untuk transisi CSS sebelum me-resize canvas
+            // Ini PENTING agar ukuran canvas sesuai setelah sidebar bergerak
+            setTimeout(() => {
+                 onWindowResize(); // Panggil resize setelah toggle
+            }, 350); // Sesuaikan durasi (ms) dengan transisi CSS sidebar-mu
+        });
+        console.log("Sidebar toggle listener added in setupUIListeners.");
+    } else {
+         console.warn("⚠️ Elemen #sidebar atau #sidebar-toggle atau body tidak ditemukan.");
+    }
 }
 
 // Membangun konten sidebar berdasarkan state aplikasi saat ini.
@@ -2891,25 +3003,6 @@ function buildSidebar() {
         buildAtomDetailMenu();
     }
     console.log("🧩 activeState.type =", activeState.type);
-    document.getElementById("sidebar-toggle")?.addEventListener("click", () => {
-  console.log("✅ Sidebar toggle diklik!");
-
-});
-const sidebar = document.getElementById("sidebar");
-const toggleBtn = document.getElementById("sidebar-toggle");
-
-
-if (toggleBtn) {
-  // Hapus dulu semua listener lama dengan clone trick
-  const newToggleBtn = toggleBtn.cloneNode(true);
-  toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
-
-  newToggleBtn.addEventListener("click", () => {
-    console.log("✅ Sidebar toggle diklik!");
-    sidebar.classList.toggle("collapsed");
-    console.log("🔄 Sidebar toggled:", sidebar.classList.contains("collapsed") ? "Tertutup" : "Terbuka");
-  });
-}
 }
 
 // Membuat menu navigasi detail atom di sidebar.
@@ -5034,7 +5127,7 @@ tweenScript.onload = () => {
 };
 
 export function addBackButton() {
-  // Jika sudah ada tombol, jangan buat lagi
+  // Jika sudah ada tombol, jangan buat lagiadd
   if (document.getElementById("back-to-classroom")) return;
 
   const btn = document.createElement("button");
@@ -5075,10 +5168,27 @@ let moleculeActive = false;
 // let moleculeAnimationId = null;
 
 function animateMolecule() {
-  if (!moleculeActive) return;
+  // Pastikan moleculeActive dan renderer valid
+  if (!moleculeActive || !renderer) {
+      // Jika tidak aktif atau renderer hilang, hentikan loop
+      if (moleculeAnimationId) {
+          cancelAnimationFrame(moleculeAnimationId);
+          moleculeAnimationId = null;
+      }
+      return;
+  }
   moleculeAnimationId = requestAnimationFrame(animateMolecule);
-  controls.update();
-  composer.render();
+
+  // Panggil fungsi animate LOGIC (tanpa render di dalamnya)
+  animate(); // Panggil logic update posisi, rotasi, dll.
+
+  // Lakukan rendering di sini
+  if (composer) {
+      composer.render();
+  } else if (scene && camera) {
+      // Fallback jika composer belum siap (seharusnya tidak terjadi jika init benar)
+       if (renderer) renderer.render(scene, camera); // Check renderer lagi
+  }
 }
 
 

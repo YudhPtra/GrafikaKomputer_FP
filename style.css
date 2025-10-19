@@ -119,22 +119,21 @@ body {
 /* Panel untuk menampilkan informasi detail atom di kanan atas. */
 #detail-info-panel {
     position: fixed;
-    top: 20px;
+    top: 70px; 
     right: 20px;
     background-color: rgba(255, 255, 255, 0.95);
     padding: 20px;
     border-radius: 12px;
     box-shadow: var(--shadow);
-    width: 400px;
-    max-width: 400px;
-    max-height: calc(100vh - 40px);
+    width: 400px; 
+    max-width: calc(100vw - 40px); 
+    max-height: calc(100vh - 90px); 
     overflow-y: auto;
     border: 1px solid var(--border-color);
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease, top 0.3s ease; 
     transform: translateX(0);
     scroll-behavior: smooth;
-    flex-shrink: 0;
-    z-index: 2000;
+    z-index: 1000; 
     pointer-events: auto;
 }
 
