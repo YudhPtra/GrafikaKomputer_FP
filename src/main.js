@@ -4,10 +4,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { enterClassroom, checkPlayerProximity } from "./core/classroom.js";
 import { updatePlayer } from "./core/player.js";
 import { init as initMolecule, addBackButton } from "./core/molecule.js";
-// import { stopMoleculeRender } from "./core/molecule.js";
 import { stopMoleculeRender } from "./core/molecule.js";
-
-// import { switchToClassroomMode } from "./main.js"; // biar bisa dipanggil balik dari tombol back (opsional)
 
 // === Variabel global ===
 let scene, camera, renderer, controls;
@@ -156,3 +153,230 @@ function onWindowResize() {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
+
+// === QUIZ MODE ===// === QUIZ MODE ===
+let allQuizData = [
+  {
+    molecule: "H2O",
+    correct: "Air (H2O)",
+    options: ["Air (H2O)", "Karbon Dioksida (CO2)", "Amonia (NH3)", "Metana (CH4)"],
+  },
+  {
+    molecule: "CO2",
+    correct: "Karbon Dioksida (CO2)",
+    options: ["Oksigen (O2)", "Karbon Dioksida (CO2)", "Metana (CH4)", "Hidrogen (H2)"],
+  },
+  {
+    molecule: "NH3",
+    correct: "Amonia (NH3)",
+    options: ["Air (H2O)", "Amonia (NH3)", "Hidrogen Sulfida (H2S)", "Metana (CH4)"],
+  },
+  {
+    molecule: "CH4",
+    correct: "Metana (CH4)",
+    options: ["Karbon Dioksida (CO2)", "Metana (CH4)", "Etana (C2H6)", "Oksigen (O2)"],
+  },
+  {
+    molecule: "O2",
+    correct: "Oksigen (O2)",
+    options: ["Oksigen (O2)", "Hidrogen (H2)", "Karbon Monoksida (CO)", "Nitrogen (N2)"],
+  },
+  {
+    molecule: "C2H6",
+    correct: "Etana (C2H6)",
+    options: ["Etana (C2H6)", "Metana (CH4)", "Karbon Dioksida (CO2)", "Amonia (NH3)"],
+  },
+  {
+    molecule: "CO",
+    correct: "Karbon Monoksida (CO)",
+    options: ["Karbon Dioksida (CO2)", "Karbon Monoksida (CO)", "Oksigen (O2)", "Hidrogen (H2)"],
+  },
+  {
+    molecule: "H2S",
+    correct: "Hidrogen Sulfida (H2S)",
+    options: ["Hidrogen Sulfida (H2S)", "Amonia (NH3)", "Air (H2O)", "Metana (CH4)"],
+  },
+];
+
+let quizData = [];
+let currentQuizIndex = 0;
+let score = 0;
+
+// 🎲 Fungsi untuk mengacak array
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// 💾 Ambil history dari localStorage
+function getQuizHistory() {
+  return JSON.parse(localStorage.getItem("quizHistory")) || [];
+}
+
+// 💾 Simpan nilai baru ke history
+function saveQuizHistory(score) {
+  const history = getQuizHistory();
+  const newRecord = {
+    date: new Date().toLocaleString(),
+    score: score,
+  };
+  history.push(newRecord);
+  localStorage.setItem("quizHistory", JSON.stringify(history));
+}
+
+// 🧾 Tampilkan history di overlay
+function showQuizHistory() {
+  const overlay = document.getElementById("quiz-overlay");
+  const history = getQuizHistory();
+
+  overlay.innerHTML = `
+    <div id="quiz-panel">
+      <h2>📜 Riwayat Kuis</h2>
+      ${
+        history.length > 0
+          ? `
+            <table class="quiz-history-table">
+              <thead>
+                <tr><th>No</th><th>Tanggal</th><th>Nilai</th></tr>
+              </thead>
+              <tbody>
+                ${history
+                  .map(
+                    (h, i) =>
+                      `<tr><td>${i + 1}</td><td>${h.date}</td><td>${h.score}</td></tr>`
+                  )
+                  .join("")}
+              </tbody>
+            </table>`
+          : "<p>Belum ada riwayat kuis.</p>"
+      }
+      <button id="history-back" class="quiz-btn">⬅ Kembali</button>
+    </div>
+  `;
+
+  document.getElementById("history-back").onclick = () => {
+    endQuiz(); // balik ke halaman akhir kuis
+  };
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key.toLowerCase() === "k" && currentMode === "classroom") {
+    startQuizMode();
+  }
+});
+
+function startQuizMode() {
+  console.log("🎯 Starting quiz mode...");
+  currentMode = "quiz";
+  classroomCanvas.classList.add("hidden");
+  moleculeCanvas.classList.remove("hidden");
+
+  const overlay = document.getElementById("quiz-overlay");
+  overlay.classList.remove("hidden");
+
+  // 🔁 Pilih 5 soal acak
+  quizData = shuffleArray([...allQuizData]).slice(0, 5);
+  currentQuizIndex = 0;
+  score = 0;
+
+  overlay.innerHTML = `
+    <div id="quiz-panel">
+      <h2 id="quiz-question"></h2>
+      <div id="quiz-options"></div>
+      <p id="quiz-score">Score: 0</p>
+    </div>
+  `;
+
+  loadQuizQuestion();
+}
+
+function loadQuizQuestion() {
+  if (currentQuizIndex >= quizData.length) {
+    endQuiz();
+    return;
+  }
+
+  const { molecule, correct, options } = quizData[currentQuizIndex];
+  stopMoleculeRender();
+  initMolecule(() => {}, molecule);
+
+  const questionEl = document.getElementById("quiz-question");
+  const optionsEl = document.getElementById("quiz-options");
+  const scoreEl = document.getElementById("quiz-score");
+
+  questionEl.textContent = `Pertanyaan ${currentQuizIndex + 1}: Molekul apakah ini?`;
+  scoreEl.textContent = `Score: ${score}`;
+  optionsEl.innerHTML = "";
+
+  shuffleArray(options).forEach((opt) => {
+    const btn = document.createElement("button");
+    btn.className = "quiz-option";
+    btn.textContent = opt;
+    btn.onclick = () => {
+      if (opt === correct) score += 20;
+      currentQuizIndex++;
+      loadQuizQuestion();
+    };
+    optionsEl.appendChild(btn);
+  });
+}
+
+function endQuiz() {
+  // 💾 Simpan hasil ke history
+  saveQuizHistory(score);
+
+  const overlay = document.getElementById("quiz-overlay");
+  overlay.innerHTML = `
+    <div id="quiz-panel">
+      <h2>Quiz Selesai!</h2>
+      <p>Skor akhir kamu: ${score}</p>
+      <div class="quiz-btn-group">
+        <button id="quiz-retry" class="quiz-btn">🔁 Ulang Kuis</button>
+        <button id="quiz-exit" class="quiz-btn">🏫 Kembali ke Classroom</button>
+        <button id="quiz-history" class="quiz-btn">📜 Lihat History</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("quiz-retry").onclick = () => {
+    quizData = shuffleArray([...allQuizData]).slice(0, 5);
+    currentQuizIndex = 0;
+    score = 0;
+
+    overlay.innerHTML = `
+      <div id="quiz-panel">
+        <h2 id="quiz-question"></h2>
+        <div id="quiz-options"></div>
+        <p id="quiz-score">Score: 0</p>
+      </div>
+    `;
+    loadQuizQuestion();
+  };
+
+  document.getElementById("quiz-exit").onclick = () => {
+    overlay.classList.add("hidden");
+    moleculeCanvas.classList.add("hidden");
+    switchToClassroomMode();
+  };
+
+  document.getElementById("quiz-history").onclick = showQuizHistory;
+}
+
+
+// === HINT VISIBILITY ===
+const quizHint = document.getElementById("quiz-hint");
+
+// Pantau perubahan mode setiap frame
+function updateHintVisibility() {
+  if (!quizHint) return;
+  if (currentMode === "classroom") {
+    quizHint.style.display = "block";
+  } else {
+    quizHint.style.display = "none";
+  }
+  requestAnimationFrame(updateHintVisibility);
+}
+updateHintVisibility();
