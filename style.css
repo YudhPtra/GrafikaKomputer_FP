@@ -45,6 +45,8 @@ body {
     flex-shrink: 0;
     pointer-events: all; /* Mengaktifkan kembali interaksi khusus untuk sidebar. */
     box-sizing: border-box;
+    pointer-events: auto;
+    z-index: 2000; /* Pastikan sidebar selalu di atas elemen lain. */
 }
 
 /* State ketika sidebar disembunyikan (digeser ke kiri). */
@@ -94,13 +96,20 @@ body {
 }
 
 /* Area canvas tempat render 3D ditampilkan. */
-#canvas-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    cursor: grab; /* Mengubah kursor saat bisa di-drag. */
+/* #canvas-container { */
+    /* position: absolute; */
+    /* top: 0; */
+    /* left: 0; */
+    /* width: 100%; */
+    /* height: 100%; */
+    /* cursor: grab; Mengubah kursor saat bisa di-drag. */
+/* } */
+
+#canvas-container canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1; /* canvas di bawah */
 }
 
 #canvas-container:active {
@@ -109,7 +118,7 @@ body {
 
 /* Panel untuk menampilkan informasi detail atom di kanan atas. */
 #detail-info-panel {
-    position: absolute;
+    position: fixed;
     top: 20px;
     right: 20px;
     background-color: rgba(255, 255, 255, 0.95);
@@ -125,6 +134,8 @@ body {
     transform: translateX(0);
     scroll-behavior: smooth;
     flex-shrink: 0;
+    z-index: 2000;
+    pointer-events: auto;
 }
 
 /* State tersembunyi untuk panel info detail. */
@@ -158,7 +169,7 @@ body {
 
 /* Panel untuk menampilkan info molekul di kiri bawah. */
 #molecule-info-panel {
-    position: absolute;
+    position: fixed;
     bottom: 20px;
     left: 20px;
     background-color: rgba(255, 255, 255, 0.9);
@@ -170,7 +181,7 @@ body {
     /* Transisi untuk posisi 'left' agar bergerak mulus saat sidebar muncul/hilang. */
     transition: opacity 0.3s ease, transform 0.3s ease, left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     transform: translateY(0);
-    z-index: 50;
+    z-index: 1000;
 }
 
 /* Menyesuaikan posisi panel info saat sidebar tertutup. */
@@ -390,4 +401,61 @@ body.sidebar-collapsed .back-btn {
 .back-btn.hidden {
     opacity: 0;
     pointer-events: none;
+}
+
+/* */
+
+#canvas-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.hidden {
+  display: none;
+}
+
+#molecule-canvas {
+  z-index: 1; /* tetap di bawah sidebar */
+  pointer-events: auto; /* biar interaktif 3D masih bisa */
+}
+
+#canvas-container canvas,
+#canvas-container > * {
+  z-index: 1;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#app-container,
+#sidebar,
+#sidebar-toggle {
+  z-index: 1000; /* pastikan selalu di atas canvas */
+  position: relative;
+  pointer-events: auto;
+}
+
+#app-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 10;
+  pointer-events: none; /* ❌ ini yang bikin aneh */
+}
+#classroom-canvas, #molecule-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 1; /* ⬅️ biar tombol di atas */
 }
